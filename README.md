@@ -1,5 +1,9 @@
 # ProfPay Wallet
 
+## 🌐 Language
+- [English](README.md)
+- [Русский](README.ru.md)
+
 ## ⚠️ Disclaimer
 
 **This project is currently in active development.**  
