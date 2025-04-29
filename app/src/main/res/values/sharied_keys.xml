@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="VALUE_THEME">valueTheme</string>
+    <string name="IS_HIDDEN_BALANCES">isHiddenBalances</string>
+    <string name="IS_TEST_NETWORK">isTestNetwork</string>
+    <string name="IS_BLOCKED_APP">is_blocked_app</string>
+    <string name="IS_ETH_DISABLE">isEthDisable</string>
+</resources>

@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package proto;
+
+option java_package = "org.example.protobuf.transfer";
+option java_outer_classname = "TransferProto";
+
+service TransferService {
+  rpc SendTronTransaction(SendUsdtTransactionRequest) returns (SendUsdtTransactionResponse);
+  rpc EstimateCommission(EstimateCommissionRequest) returns (EstimateCommissionResponse);
+  rpc GetTransactionStatus(TransactionStatusRequest) returns (TransactionStatusResponse);
+}
+
+message TransactionStatusRequest {
+  string tx_id = 1;
+}
+
+message TransactionStatusResponse {
+  bool is_processed = 1;
+  bool is_error = 2;
+}
+
+message EstimateCommissionRequest {
+  uint64 user_id = 1;
+  string address = 2;
+  optional uint64 energy_required = 3;
+  optional uint64 bandwidth_required = 4;
+}
+
+message EstimateCommissionResponse {
+  double commission = 1;
+  google.protobuf.Timestamp timestamp = 2;
+}
+
+message SendUsdtTransactionRequest {
+  uint64 user_id = 1;
+  TransactionData transaction_data = 2;
+  optional TransactionCommissionData commission_data = 3;
+  TransferNetwork network = 4;
+  TransferToken token = 5;
+  optional string tx_id = 6;
+}
+
+message TransactionData {
+  string address = 1;
+  string receiverAddress = 2;
+  bytes amount = 3;
+  uint64 estimate_energy = 4;
+  uint64 bandwidth_required = 5;
+  bytes txn_bytes = 6;
+}
+
+message TransactionCommissionData {
+  string address = 1;
+  bytes amount = 2;
+  optional uint64 estimate_energy = 3;
+  uint64 bandwidth_required = 4;
+  bytes txn_bytes = 5;
+}
+
+enum TransferNetwork {
+  MAIN_NET = 0;
+  TESTNET_NILE = 1;
+}
+
+enum TransferToken {
+  TRX = 0;
+  USDT_TRC20 = 1;
+}
+
+message SendUsdtTransactionResponse {
+  google.protobuf.Timestamp timestamp = 1;
+}

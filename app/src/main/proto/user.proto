@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package proto;
+
+option java_package = "org.example.protobuf.user";
+option java_outer_classname = "UserProto";
+
+service UserService {
+  rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse);
+  rpc UpdateUserTelegram(UpdateUserTelegramRequest) returns (UpdateUserTelegramResponse);
+  rpc GetUserTelegramData(UserTelegramDataRequest) returns (UserTelegramDataResponse);
+  rpc UpdateUserDeviceToken(UpdateUserDeviceTokenRequest) returns (UserTelegramDataResponse);
+  rpc RegisterUserDevice(RegisterUserDeviceRequest) returns (RegisterUserDeviceResponse);
+  rpc IsUserExists(IsUserExistsRequest) returns (IsUserExistsResponse);
+}
+
+message IsUserExistsRequest {
+  uint64 user_id = 1;
+}
+
+message IsUserExistsResponse {
+  bool exists = 1;
+}
+
+message RegisterUserDeviceRequest {
+  uint64 user_id = 1;
+  string device_token = 2;
+  string app_id = 3;
+}
+
+message RegisterUserDeviceResponse {
+  google.protobuf.Timestamp timestamp = 1;
+  bool successful = 2;
+}
+
+message UpdateUserDeviceTokenRequest {
+  string app_id = 1;
+  string device_token = 2;
+}
+
+message RegisterUserRequest {
+  string app_id = 1;
+  string device_token = 2;
+}
+
+message RegisterUserResponse {
+  google.protobuf.Timestamp timestamp = 1;
+  int64 user_id = 2;
+}
+
+message UpdateUserTelegramRequest {
+  int64 user_id = 1;
+  int64 telegram_id = 2;
+  string username = 3;
+}
+
+message UserTelegramDataRequest {
+  string app_id = 1;
+  int64 user_id = 2;
+}
+
+message UserTelegramDataResponse {
+  int64 telegram_id = 2;
+  string username = 3;
+}
+
+message UpdateUserTelegramResponse {
+  google.protobuf.Timestamp timestamp = 1;
+  int64 user_id = 2;
+  int64 telegram_id = 3;
+}
+
+enum RegisterUserErrorCode {
+  REGISTER_USER_ERROR_CODE_TELEGRAM_ID_ALREADY_EXIST = 0;
+  REGISTER_USER_ERROR_CODE_USERNAME_ALREADY_EXIST = 1;
+  REGISTER_USER_ERROR_CODE_APP_ID_ALREADY_EXIST = 2;
+}
+
+message RegisterUserExceptionResponse {
+  google.protobuf.Timestamp timestamp = 1;
+  RegisterUserErrorCode error_code = 2;
+}

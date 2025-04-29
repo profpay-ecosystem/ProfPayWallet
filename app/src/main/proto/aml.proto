@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package proto;
+
+option java_package = "org.server.protobuf.aml";
+option java_outer_classname = "AmlProto";
+
+service AmlService {
+  rpc getAmlFromTransactionId(GetAmlByTxIdRequest) returns (GetAmlByTxIdResponse);
+  rpc renewAmlFromTransactionId(GetAmlByTxIdRequest) returns (GetAmlByTxIdResponse);
+  rpc processAmlPayment(AmlPaymentRequest) returns (AmlPaymentResponse);
+}
+
+message AmlPaymentRequest {
+  uint64 user_id = 1;
+  string tx = 2;
+  string address = 3;
+  AmlTransactionDetails transaction = 4;
+}
+
+message AmlPaymentResponse {
+  google.protobuf.Timestamp timestamp = 1;
+  PayAmlReportResponseStatus status = 2;
+}
+
+message AmlTransactionDetails {
+  string address = 1;
+  uint64 estimate_energy = 2;
+  uint64 bandwidth_required = 3;
+  bytes txn_bytes = 4;
+}
+
+message GetAmlByTxIdRequest {
+  uint64 user_id = 1;
+  string tx = 2;
+  string address = 3;
+  string token_name = 4;
+}
+
+message GetAmlByTxIdResponse {
+  uint64 id = 1;
+  string aml_id = 2;
+  uint64 created_at = 3;
+  uint64 requested_at = 4;
+  float risky_score = 5;
+  repeated AmlRiskSignals signals = 6;
+}
+
+message AmlRiskSignals {
+  string name = 1;
+  float risky = 2;
+  RiskType risk_type = 3;
+}
+
+message AmlErrorResponse {
+  string message = 1;
+}
+
+enum RiskType {
+  HIGH_RISC = 0;
+  MEDIUM_RISC = 1;
+  LOW_RISC = 2;
+}
+
+enum PayAmlReportResponseStatus {
+  SUCCESS = 0;
+  ERROR = 1;
+}

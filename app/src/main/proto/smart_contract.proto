@@ -1,0 +1,234 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package proto;
+
+option java_package = "org.example.protobuf.smart";
+option java_outer_classname = "SmartContractProto";
+
+service SmartContractServer {
+  rpc CreateContractDeal(ContractDealCreateRequest) returns (ContractDealCreateResponse);
+  rpc GetMyContractDeals(GetMyContractDealsRequest) returns (GetMyContractDealsResponse);
+  rpc ContractDealStatusChanged(ContractDealUpdateRequest) returns (ContractDealUpdateResponse);
+  rpc ContractDealStatusExpertChanged(ContractDealUpdateRequest) returns (ContractDealUpdateResponse);
+  rpc DeploySmartContract(DeploySmartContractRequest) returns (DeploySmartContractResponse);
+  rpc GetResourceQuote(ResourceQuoteRequest) returns (ResourceQuoteResponse);
+  rpc CallContract(CallContractRequest) returns (CallContractResponse);
+}
+
+message ResourceQuoteRequest {
+  string app_id = 1;
+  string address = 2;
+  uint64 energy_required = 3;
+  uint64 bandwidth_required = 4;
+}
+
+message ResourceQuoteResponse {
+  uint64 commission = 1;
+  FeePolicy fee_policy = 2;
+}
+
+enum FeePolicy {
+  STANDARD = 0;
+  DISCOUNTED = 1;
+  WAIVED = 2;
+}
+
+message CallContractRequest {
+  uint64 user_id = 1;
+  string app_id = 2;
+  string contract_address = 3;
+  uint64 deal_base_id = 4;
+  uint64 deal_blockchain_id = 5;
+  FeePolicy fee_policy = 6;
+  DealContractChangeStatuses change_status = 7;
+  CallContractTransactionData contract = 8;
+  CallContractTransactionData commission = 9;
+}
+
+message CallContractTransactionData {
+  optional string address = 1;
+  optional bytes amount = 2;
+  uint64 estimate_energy = 3;
+  uint64 bandwidth_required = 4;
+  bytes txn_bytes = 5;
+}
+
+message CallContractResponse {
+  google.protobuf.Timestamp timestamp = 1;
+}
+
+message DeploySmartContractRequest {
+  string app_id = 1;
+  uint64 user_id = 2;
+  string address = 3;
+  string contract_address = 4;
+  FeePolicy fee_policy = 5;
+  DeployTransactionData contract = 6;
+  DeployTransactionData commission = 7;
+}
+
+message DeployTransactionData {
+  string address = 1;
+  bytes amount = 2;
+  uint64 estimate_energy = 3;
+  uint64 bandwidth_required = 4;
+  bytes txn_bytes = 5;
+}
+
+message DeploySmartContractResponse {
+  google.protobuf.Timestamp timestamp = 1;
+}
+
+message ContractDealUpdateRequest {
+  string app_id = 1;
+  DealContractChangeStatuses change_status = 2;
+  ContractDealListResponse deal = 3;
+}
+
+enum DealContractChangeStatuses {
+  BUYER_CREATED = 0;
+  BUYER_DEPOSITED = 1;
+  BUYER_CONFIRMED = 2;
+  SELLER_CONFIRMED = 3;
+  SELLER_PAID_EXPERT_FEE = 4;
+  BUYER_CANCEL_CONTRACT = 5;
+  BUYER_CANCEL_PAID_CONTRACT = 6;
+  SELLER_CANCEL_CONTRACT = 7;
+  BUYER_CANCEL_DEAL = 8;
+  SELLER_CANCEL_DEAL = 9;
+  BUYER_OPEN_DISPUTE = 10;
+  SELLER_OPEN_DISPUTE = 11;
+  BUYER_DELETE_CONTRACT = 12;
+
+  EXPERT_SET_DECISION = 13;
+  EXPERT_DISPUTE_AGREED = 14;
+  SELLER_DISPUTE_AGREED = 15;
+  BUYER_DISPUTE_AGREED = 16;
+
+  EXPERT_DISPUTE_DECLINE = 17;
+  SELLER_DISPUTE_DECLINE = 18;
+  BUYER_DISPUTE_DECLINE = 19;
+}
+
+message ContractDealUpdateResponse {
+  google.protobuf.Timestamp timestamp = 1;
+  bool update_status = 2;
+}
+
+message ContractDealCreateRequest {
+  int64 buyer_user_id = 1;
+  int64 seller_user_id = 2;
+  bytes amount = 3;
+  int32 guarantor_group_id = 4;
+}
+
+message ContractDealCreateResponse {
+  google.protobuf.Timestamp timestamp = 1;
+  int64 deal_id = 2;
+}
+
+message GetMyContractDealsRequest {
+  int64 user_id = 1;
+}
+
+message GetMyContractDealsResponse {
+  google.protobuf.Timestamp timestamp = 1;
+  repeated ContractDealListResponse deals = 2;
+}
+
+message ContractDealListResponse {
+  optional uint64 deal_blockchain_id = 1;
+  uint64 deal_base_id = 2;
+  uint64 smart_contract_id = 3;
+  optional string smart_contract_address = 4;
+  bytes amount = 5;
+  ContractDealUserDataResponse buyer = 6;
+  ContractDealUserDataResponse seller = 7;
+  repeated ContractDealUserDataResponse admins = 8; // Смарт контракт позволяет использовать лишь три админа.
+  optional DealResponse deal_data = 9; // Данные приходящие от блокчейна Tron.
+  optional DisputeResolutionStatusResponse disputeResolutionStatus = 10;
+}
+
+message ContractDealUserDataResponse {
+  uint64 userId = 1;
+  uint64 telegramId = 2;
+  string username = 3;
+  string address = 4;
+  optional ContractUserStatus status = 5;
+  ContractDealRequestType requestType = 6; // Типы решений у каждого участника
+}
+
+message ContractUserStatus {
+  string name = 1;
+  string name_code = 2;
+  uint64 contract_percent = 3;
+}
+
+message DisputeResolutionStatusResponse {
+  string decisionAdmin = 1;
+  bytes amountToSeller = 2;
+  bytes amountToBuyer = 3;
+  repeated string adminsAgreed = 4;
+  bool sellerAgreed = 5;
+  bool buyerAgreed = 6;
+  uint64 adminAgreedVoted = 7;
+  repeated string adminsDeclined = 8;
+  bool sellerDeclined = 9;
+  bool buyerDeclined = 10;
+  uint64 adminDeclinedVoted = 11;
+}
+
+message DealResponse {
+  string seller = 1;
+  string buyer = 2;
+  bytes amount = 3;
+  uint64 score = 6;
+  bool ended = 7;
+  uint64 totalExpertCommissions = 8;
+  PaymentStatusResponse paymentStatus = 9;
+  AgreementStatusResponse agreementStatus = 10;
+}
+
+message PaymentStatusResponse {
+  bool buyerDepositAndExpertFeePaid = 1;
+  bool sellerExpertFeePaid = 2;
+}
+
+message AgreementStatusResponse {
+  bool sellerAgreed = 1;
+  bool buyerAgreed = 2;
+  bool disputed = 6;
+}
+
+message DealCancelResponse {
+  bool admin1 = 1;
+  bool admin2 = 2;
+  bool admin3 = 3;
+  int64 adminVoted = 4;
+  bool sellerCancelRequested = 5;
+  bool buyerCancelRequested = 6;
+}
+
+enum ContractDealRequestType {
+  INITIALIZED = 0;
+  CREATED = 1;
+  CONFIRM_BUYER = 2;
+  CONFIRM_SELLER = 3;
+  CONFIRM_ADMIN = 4;
+  TRANSFER = 5;
+  TERMINATION_BUYER = 6;
+  TERMINATION_SELLER = 7;
+  TERMINATION_ADMIN = 8;
+}
+
+enum SCCreateErrorCode {
+  SC_CREATE_ERROR_CODE_INVALID_SMART_VALUE = 0;
+  SC_CREATE_ERROR_CODE_SMART_CODE_CANNOT_BE_NULL = 1;
+}
+
+message SmartContractCreateExceptionResponse {
+  google.protobuf.Timestamp timestamp = 1;
+  SCCreateErrorCode error_code = 2;
+}
