@@ -1,6 +1,5 @@
 package com.example.telegramWallet.tron
 
-import com.example.telegramWallet.BuildConfig
 import org.tron.trident.core.ApiWrapper
 import org.tron.trident.core.contract.Contract
 import org.tron.trident.core.contract.Trc20Contract
@@ -11,43 +10,19 @@ import java.math.BigInteger
 class Accounts {
     // Получаем ресурсы аккаунта.
     fun getAccountResource(ownerAddress: String, privateKey: String): Response.AccountResourceMessage {
-        val wrapper: ApiWrapper = if (BuildConfig.DEBUG) {
-            ApiWrapper.ofNile(privateKey)
-        } else {
-            ApiWrapper(
-                "5.39.223.8:59151",
-                "5.39.223.8:50061",
-                privateKey
-            )
-        }
+        val wrapper = ApiWrapper("5.39.223.8:59151", "5.39.223.8:50061", privateKey)
         return wrapper.getAccountResource(ownerAddress)
     }
 
     // Информация об учетной записи, включая баланс TRX, балансы TRC-10, информацию о ставках,
     // информация о голосовании и разрешениях и т. д.
     fun getAccount(ownerAddress: String, privateKey: String): Response.Account {
-        val wrapper: ApiWrapper = if (BuildConfig.DEBUG) {
-            ApiWrapper.ofNile(privateKey)
-        } else {
-            ApiWrapper(
-                "5.39.223.8:59151",
-                "5.39.223.8:50061",
-                privateKey
-            )
-        }
+        val wrapper = ApiWrapper("5.39.223.8:59151", "5.39.223.8:50061", privateKey)
         return wrapper.getAccount(ownerAddress)
     }
 
     fun allowance(spender: String, ownerAddress: String, privateKey: String): BigInteger? {
-        val wrapper: ApiWrapper = if (BuildConfig.DEBUG) {
-            ApiWrapper.ofNile(privateKey)
-        } else {
-            ApiWrapper(
-                "5.39.223.8:59151",
-                "5.39.223.8:50061",
-                privateKey
-            )
-        }
+        val wrapper = ApiWrapper("5.39.223.8:59151", "5.39.223.8:50061", privateKey)
 
         val contract: Contract = wrapper.getContract("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t")
         val token = Trc20Contract(contract, ownerAddress, wrapper)
@@ -62,15 +37,7 @@ class Accounts {
         ownerAddress: String,
         privateKey: String,
     ): Boolean {
-        val wrapper: ApiWrapper = if (BuildConfig.DEBUG) {
-            ApiWrapper.ofNile(privateKey)
-        } else {
-            ApiWrapper(
-                "5.39.223.8:59151",
-                "5.39.223.8:50061",
-                privateKey
-            )
-        }
+        val wrapper = ApiWrapper("5.39.223.8:59151", "5.39.223.8:50061", privateKey)
 
         val contract: Contract = wrapper.getContract("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t")
         val token = Trc20Contract(contract, ownerAddress, wrapper)

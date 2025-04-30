@@ -10,15 +10,7 @@ import org.tron.trident.proto.Response
 class Staking {
     // Заморозка TRX.
     fun freezeTrxV2(value: Long, ownerAddress: String, privateKey: String): String? {
-        val wrapper: ApiWrapper = if (BuildConfig.DEBUG) {
-            ApiWrapper.ofNile(privateKey)
-        } else {
-            ApiWrapper(
-                "5.39.223.8:59151",
-                "5.39.223.8:50061",
-                privateKey
-            )
-        }
+        val wrapper = ApiWrapper("5.39.223.8:59151", "5.39.223.8:50061", privateKey)
         val txnExt: Response.TransactionExtention = wrapper.freezeBalanceV2(ownerAddress, value, 1)
 
         if (Response.TransactionReturn.response_code.SUCCESS !== txnExt.result.code) {
@@ -31,15 +23,7 @@ class Staking {
 
     // Разморозка TRX.
     fun unfreezeTrxV2(ownerAddress: String, privateKey: String, unfreezeBalance: Long): String {
-         val wrapper: ApiWrapper = if (BuildConfig.DEBUG) {
-             ApiWrapper.ofNile(privateKey)
-         } else {
-             ApiWrapper(
-                 "5.39.223.8:59151",
-                 "5.39.223.8:50061",
-                 privateKey
-             )
-         }
+         val wrapper = ApiWrapper("5.39.223.8:59151", "5.39.223.8:50061", privateKey)
 
         val txnExt: Response.TransactionExtention = wrapper.unfreezeBalanceV2(ownerAddress, unfreezeBalance, 1)
 

@@ -191,21 +191,5 @@ class MultiSigWrite {
         val builder = wrapper.triggerCall(ownerAddress, contractAddress, createDeal).setFeeLimit(140_000_000)
         val signedTransaction: Chain.Transaction = wrapper.signTransaction(builder.transaction)
         return signedTransaction.toByteString()
-//        val transactionId = wrapper.broadcastTransaction(signedTransaction)
-//
-//        var transactionInfo: Response.TransactionInfo? = null
-//        while (transactionInfo == null) {
-//            try {
-//                transactionInfo = wrapper.getTransactionInfoById(transactionId)
-//            } catch (e: Exception) {
-//                delay(1000L)
-//                continue
-//            }
-//        }
-//
-//        val result = Numeric.toHexString(transactionInfo.getContractResult(0).toByteArray())
-//        val decodedResult = FunctionReturnDecoder.decode(result, createDeal.outputParameters)
-//        wrapper.close()
-//        return decodedResult[0].value.toString().toLong()
     }
 }

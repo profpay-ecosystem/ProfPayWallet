@@ -157,11 +157,6 @@ fun WalletInfoScreen(
 
     val sharedPrefExe = sharedPref()
     val bottomPadding by remember { mutableFloatStateOf(sharedPrefExe.getFloat("bottomPadding", 54f)) }
-//    LaunchedEffect(Unit){
-//        if (bottomPadding.dp > 12.dp) {
-//            bottomPadding -= 12f
-//        }
-//    }
 
     Scaffold(
         modifier = Modifier,

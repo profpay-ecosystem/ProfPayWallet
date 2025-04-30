@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.util.Log
 import androidx.core.content.edit
-import com.example.telegramWallet.backend.grpc.AmlGrpcClient
 import com.example.telegramWallet.backend.grpc.CryptoAddressGrpcClient
 import com.example.telegramWallet.backend.grpc.GrpcClientFactory
 import com.example.telegramWallet.backend.grpc.UserGrpcClient
@@ -17,7 +16,6 @@ import com.example.telegramWallet.backend.http.models.binance.BinancePriceConver
 import com.example.telegramWallet.backend.http.models.binance.BinanceSymbolEnum
 import com.example.telegramWallet.backend.http.models.coingecko.CoinSymbolEnum
 import com.example.telegramWallet.backend.http.models.coingecko.Tron24hChangeResponse
-import com.example.telegramWallet.data.database.entities.ProfileEntity
 import com.example.telegramWallet.data.database.entities.wallet.ExchangeRatesEntity
 import com.example.telegramWallet.data.database.entities.wallet.TradingInsightsEntity
 import com.example.telegramWallet.data.database.repositories.ProfileRepo
@@ -25,13 +23,10 @@ import com.example.telegramWallet.data.database.repositories.wallet.AddressRepo
 import com.example.telegramWallet.data.database.repositories.wallet.ExchangeRatesRepo
 import com.example.telegramWallet.data.database.repositories.wallet.TradingInsightsRepo
 import com.example.telegramWallet.data.services.foreground.PusherService
-import com.example.telegramWallet.exceptions.payments.GrpcServerErrorSendTransactionExcpetion
-import com.example.telegramWallet.ui.shared.sharedPref
 import io.sentry.Sentry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import me.pushy.sdk.Pushy
-import java.security.KeyStore
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume

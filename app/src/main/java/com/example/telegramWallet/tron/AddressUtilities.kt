@@ -16,6 +16,7 @@ import org.bouncycastle.jcajce.provider.digest.Keccak
 import org.tron.trident.core.ApiWrapper
 import org.tron.trident.core.contract.Contract
 import org.tron.trident.core.contract.Trc20Contract
+import org.tron.trident.core.key.KeyPair
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
@@ -184,8 +185,7 @@ class AddressUtilities {
      * Данный метод используется для получения TRC20 USDT баланса
      */
     fun getUsdtBalance(accountAddr: String): BigInteger {
-        val privateKey = "3297b61e7b1cefa44db1243ef63bf33fcf9747377a93c6d750e268e97fee4e38"
-        val wrapper = ApiWrapper("5.39.223.8:59151", "5.39.223.8:50061", privateKey)
+        val wrapper = ApiWrapper("5.39.223.8:59151", "5.39.223.8:50061", KeyPair.generate().toPrivateKey())
 
         val contract: Contract = wrapper.getContract("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t")
         val token = Trc20Contract(contract, "TJJaVcRremausriMLkZeRedM95v7HW4j4D", wrapper)
@@ -199,8 +199,7 @@ class AddressUtilities {
      * Данный метод используется для получения TRX баланса
      */
     fun getTrxBalance(accountAddr: String): BigInteger {
-        val privateKey = "3297b61e7b1cefa44db1243ef63bf33fcf9747377a93c6d750e268e97fee4e38"
-        val wrapper = ApiWrapper("5.39.223.8:59151", "5.39.223.8:50061", privateKey)
+        val wrapper = ApiWrapper("5.39.223.8:59151", "5.39.223.8:50061", KeyPair.generate().toPrivateKey())
         val balanceInSun: BigInteger = BigInteger.valueOf(wrapper.getAccountBalance(accountAddr))
         wrapper.close()
         return balanceInSun
@@ -342,15 +341,14 @@ class AddressUtilities {
             // Проверяем контрольную сумму
             val calculatedChecksum = Arrays.copyOfRange(sha256_2, 0, 4)
 
-            return Arrays.equals(checksum, calculatedChecksum)
+            return checksum.contentEquals(calculatedChecksum)
         } catch (e: Exception) {
             return false
         }
     }
 
     suspend fun isAddressActivated(address: String): Boolean {
-        val privateKey = "3297b61e7b1cefa44db1243ef63bf33fcf9747377a93c6d750e268e97fee4e38"
-        val wrapper = ApiWrapper("5.39.223.8:59151", "5.39.223.8:50061", privateKey)
+        val wrapper = ApiWrapper("5.39.223.8:59151", "5.39.223.8:50061", KeyPair.generate().toPrivateKey())
 
         return try {
             withTimeout(5000) {
@@ -366,8 +364,7 @@ class AddressUtilities {
     }
 
     fun getCreateNewAccountFeeInSystemContract(): BigInteger {
-        val privateKey = "3297b61e7b1cefa44db1243ef63bf33fcf9747377a93c6d750e268e97fee4e38"
-        val wrapper = ApiWrapper("5.39.223.8:59151", "5.39.223.8:50061", privateKey)
+        val wrapper = ApiWrapper("5.39.223.8:59151", "5.39.223.8:50061", KeyPair.generate().toPrivateKey())
 
         for (chainParameter in wrapper.chainParameters.chainParameterList) {
             if (chainParameter.key == "getCreateNewAccountFeeInSystemContract") {

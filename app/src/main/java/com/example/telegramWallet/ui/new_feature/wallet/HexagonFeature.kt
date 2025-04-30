@@ -81,23 +81,6 @@ class HexagonWithCircleShape(private val rotate: Boolean = false) : Shape {
             matrix.postRotate(30f, size.width / 2, size.height / 2)
             path.transform(matrix)
         }
-//        val points = generateHexagonPoints()
-//
-//        path.apply {
-//            val centerX = size.width / 2
-//            val centerY = size.height / 2
-//            val radius = size.width / 2
-//            val degreeStep = 30.toDouble()
-//
-//
-//            points.forEachIndexed { i, point ->
-//                val angle = Math.toRadians(degreeStep * i)
-//                moveTo(
-//                    (centerX + radius * cos(angle)).toFloat(),
-//                    (centerY + radius * sin(angle)).toFloat()
-//                )
-//            }
-//            close()
 
         return Outline.Generic(path.asComposePath())
     }

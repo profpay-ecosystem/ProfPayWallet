@@ -46,18 +46,6 @@ class PushReceiver : BroadcastReceiver(), CoroutineScope {
     override val coroutineContext: CoroutineContext get() = Dispatchers.IO + job
 
     override fun onReceive(context: Context, intent: Intent) {
-//        val grpcClientFactory = EntryPoints.get(context.applicationContext, GrpcClientFactoryEntryPoint::class.java).grpcClientFactory
-//        val userGrpcClient = grpcClientFactory.getGrpcClient(
-//            UserGrpcClient::class.java,
-//            "grpc.wallet-services-srv.com",
-//            8443
-//        )
-//        val cryptoAddressGrpcClient: CryptoAddressGrpcClient = grpcClientFactory.getGrpcClient(
-//            CryptoAddressGrpcClient::class.java,
-//            "grpc.wallet-services-srv.com",
-//            8443
-//        )
-
         val notificationTitle = if (intent.getStringExtra("title") != null) intent.getStringExtra("title") else context.packageManager.getApplicationLabel(context.applicationInfo).toString()
         val notificationText = if (intent.getStringExtra("message") != null) intent.getStringExtra("message") else "Test notification"
         val transferErrorMessage = if (intent.getStringExtra("transferErrorMessage") != null) intent.getStringExtra("transferErrorMessage") else null
