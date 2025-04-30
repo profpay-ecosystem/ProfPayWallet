@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.telegramWallet.data.database.entities.SettingsEntity
+import com.example.telegramWallet.data.database.repositories.ProfileRepo
 import com.example.telegramWallet.data.database.repositories.SettingsRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -14,6 +15,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val settingsRepo: SettingsRepo,
+    val profileRepo: ProfileRepo,
     @ApplicationContext val applicationContext: Context,
 ) : ViewModel() {
     /**

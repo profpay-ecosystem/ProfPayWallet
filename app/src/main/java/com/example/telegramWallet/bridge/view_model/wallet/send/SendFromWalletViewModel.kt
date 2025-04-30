@@ -241,7 +241,7 @@ class SendFromWalletViewModel @Inject constructor(
         addressSending: String,
         tokenNameModel: TokenName
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             if (addressWithTokens == null || sumSending.isEmpty() || !tron.addressUtilities.isValidTronAddress(
                     addressSending
                 )
@@ -263,11 +263,13 @@ class SendFromWalletViewModel @Inject constructor(
                 ).energy
             } else 0
 
-            estimateCommission(
-                address = addressWithTokens.addressEntity.address,
-                bandwidth = requiredBandwidth.bandwidth,
-                energy = requiredEnergy
-            )
+            withContext(Dispatchers.Main) {
+                estimateCommission(
+                    address = addressWithTokens.addressEntity.address,
+                    bandwidth = requiredBandwidth.bandwidth,
+                    energy = requiredEnergy
+                )
+            }
         }
     }
 }

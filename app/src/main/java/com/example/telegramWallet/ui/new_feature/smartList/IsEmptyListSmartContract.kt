@@ -24,6 +24,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,15 +37,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.telegramWallet.R
-import com.example.telegramWallet.ui.shared.sharedPref
 import androidx.core.net.toUri
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.telegramWallet.R
+import com.example.telegramWallet.bridge.view_model.smart_contract.GetSmartContractViewModel
+import kotlinx.coroutines.launch
 
 @Composable
-fun IsEmptyListSmartContract() {
+fun IsEmptyListSmartContract(viewModel: GetSmartContractViewModel = hiltViewModel()) {
     var scale by remember { mutableFloatStateOf(1f) }
     val context = LocalContext.current
-    val appUniqueID: String? = sharedPref().getString("APP_UNIQUE_ID", null)
+
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -73,10 +77,13 @@ fun IsEmptyListSmartContract() {
             modifier = Modifier.size(230.dp),
             elevation = CardDefaults.cardElevation(10.dp),
             onClick = {
-                val intent = Intent(Intent.ACTION_VIEW).apply {
-                    data = "https://t.me/ProfPay_bot?start=$appUniqueID".toUri()
+                coroutineScope.launch {
+                    val appId = viewModel.profileRepo.getProfileAppId()
+                    val intent = Intent(Intent.ACTION_VIEW).apply {
+                        data = "https://t.me/ProfPay_bot?start=$appId".toUri()
+                    }
+                    context.startActivity(intent)
                 }
-                context.startActivity(intent)
             }
         ) {
             Box(

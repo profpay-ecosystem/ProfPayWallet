@@ -50,6 +50,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -88,7 +89,10 @@ import com.example.telegramWallet.ui.app.theme.RedColor
 import com.example.telegramWallet.ui.shared.sharedPref
 import io.sentry.Sentry
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.example.protobuf.transfer.TransferProto.TransferToken
@@ -97,7 +101,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.text.DecimalFormat
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
 @Composable
 fun SendFromWalletInfoScreen(
     addressId: Long,

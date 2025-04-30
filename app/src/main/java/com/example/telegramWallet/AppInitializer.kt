@@ -56,6 +56,7 @@ class AppInitializer @Inject constructor(
         val firstStarted = sharedPrefs.getBoolean("FIRST_STARTED", true)
         if (PusherService.isRunning) return
 
+        // TODO: Переделать
         if (firstStarted) {
             withContext(Dispatchers.IO) {
                 val deviceToken = Pushy.register(context)
