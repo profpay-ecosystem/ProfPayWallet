@@ -54,7 +54,6 @@ class PusherService : Service(), CoroutineScope {
         isRunning = true
     }
 
-    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForeground()
         launch {
@@ -63,7 +62,6 @@ class PusherService : Service(), CoroutineScope {
         return START_STICKY
     }
 
-    @RequiresApi(Build.VERSION_CODES.Q)
     @SuppressLint("ForegroundServiceType")
     private fun startForeground() {
         val notificationIntent = Intent(this, MainActivity::class.java)
@@ -82,7 +80,6 @@ class PusherService : Service(), CoroutineScope {
         startForeground(uniqueNotificationID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun showNotification(contentTitle: String, contentText: String) {
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         val notificationIntent = Intent(this, MainActivity::class.java)
@@ -106,19 +103,16 @@ class PusherService : Service(), CoroutineScope {
 
     // Необходимая для сервиса функций уведомлений, Android по умолчанию выключает уведомления.
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val serviceChannel = NotificationChannel(
-                PusherService.CHANNEL_ID, "Pusher Service Channel",
-                NotificationManager.IMPORTANCE_DEFAULT
-            )
-            val manager = getSystemService(
-                NotificationManager::class.java
-            )
-            manager.createNotificationChannel(serviceChannel)
-        }
+        val serviceChannel = NotificationChannel(
+            PusherService.CHANNEL_ID, "Pusher Service Channel",
+            NotificationManager.IMPORTANCE_DEFAULT
+        )
+        val manager = getSystemService(
+            NotificationManager::class.java
+        )
+        manager.createNotificationChannel(serviceChannel)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun scheduleAll() {
         val kronScheduler = buildSchedule {
             seconds {

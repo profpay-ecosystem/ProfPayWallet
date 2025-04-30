@@ -38,6 +38,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import com.example.telegramWallet.R
 import com.example.telegramWallet.ui.shared.sharedPref
+import androidx.core.content.edit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -131,7 +132,7 @@ fun SettingsSecurityScreen(goToBack: () -> Unit, goToLock: () -> Unit){
                             setUseBiomAuth(
                                 switchForSettings(useBiomAuth) {
                                     // Todo: переменные для изменеия
-                                    sharedPref.edit().putBoolean("useBiomAuth", it).apply()
+                                    sharedPref.edit() { putBoolean("useBiomAuth", it) }
                                 }
                             )
                         }

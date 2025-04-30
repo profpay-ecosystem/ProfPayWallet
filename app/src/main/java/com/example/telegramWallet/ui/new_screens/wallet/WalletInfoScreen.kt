@@ -38,6 +38,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
@@ -155,7 +156,7 @@ fun WalletInfoScreen(
     )
 
     val sharedPrefExe = sharedPref()
-    val bottomPadding by remember { mutableStateOf(sharedPrefExe.getFloat("bottomPadding", 54f)) }
+    val bottomPadding by remember { mutableFloatStateOf(sharedPrefExe.getFloat("bottomPadding", 54f)) }
 //    LaunchedEffect(Unit){
 //        if (bottomPadding.dp > 12.dp) {
 //            bottomPadding -= 12f

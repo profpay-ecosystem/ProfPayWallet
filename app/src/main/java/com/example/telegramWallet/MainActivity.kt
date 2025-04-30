@@ -34,6 +34,7 @@ import io.sentry.android.core.SentryAndroid
 import kotlinx.coroutines.launch
 import me.pushy.sdk.Pushy
 import javax.inject.Inject
+import androidx.core.content.edit
 
 @AndroidEntryPoint
 class MainActivity : FragmentActivity(), Application.ActivityLifecycleCallbacks {
@@ -42,7 +43,7 @@ class MainActivity : FragmentActivity(), Application.ActivityLifecycleCallbacks 
     @Inject lateinit var appInitializer: AppInitializer
     lateinit var viewModel: ThemeViewModel
 
-    @RequiresApi(Build.VERSION_CODES.R)
+    @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Pushy.listen(this)
@@ -76,6 +77,7 @@ class MainActivity : FragmentActivity(), Application.ActivityLifecycleCallbacks 
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
     @Composable
     private fun MyAppContent(sharedPrefs: SharedPreferences) {
         viewModel = hiltViewModel()
@@ -136,7 +138,7 @@ class MainActivity : FragmentActivity(), Application.ActivityLifecycleCallbacks 
             ContextCompat.getString(activity, R.string.preference_file_key),
             Context.MODE_PRIVATE
         )
-        sharedPref.edit().putBoolean("session_activity", false).apply()
+        sharedPref.edit() { putBoolean("session_activity", false) }
     }
 
     override fun onActivityStopped(activity: Activity) {}

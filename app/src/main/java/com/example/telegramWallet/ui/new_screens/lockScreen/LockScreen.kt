@@ -131,7 +131,7 @@ fun LockScreen(
                     val inputPinCodeInt = inputPinCode.joinToString(separator = "").toInt()
                     val hashPin = hashPasswordWithBCrypt(sharedPref, inputPinCodeInt)
                     if (pinCode.equals(hashPin)) {
-                        sharedPref.edit().putBoolean("session_activity", true).apply()
+                        sharedPref.edit() { putBoolean("session_activity", true) }
 
                         LaunchedEffect(Unit) {
                             toNavigate()

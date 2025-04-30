@@ -2,7 +2,6 @@ package com.example.telegramWallet.ui.widgets
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -24,6 +23,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.telegramWallet.R
 import com.example.telegramWallet.bridge.view_model.settings.SettingsViewModel
+import androidx.core.net.toUri
 
 @Composable
 fun SettingsBotWidget(
@@ -41,7 +41,7 @@ fun SettingsBotWidget(
         .clip(RoundedCornerShape(8.dp))
         .clickable {
             val intent = Intent(Intent.ACTION_VIEW).apply {
-                data = Uri.parse("https://t.me/ProfPay_bot?start=$appUniqueID")
+                data = "https://t.me/ProfPay_bot?start=$appUniqueID".toUri()
             }
             context.startActivity(intent)
         }

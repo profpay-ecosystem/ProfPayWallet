@@ -1,7 +1,6 @@
 package com.example.telegramWallet.ui.new_feature.smartList
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
@@ -66,6 +65,7 @@ import com.example.telegramWallet.ui.new_feature.wallet.HexagonShape
 import kotlinx.coroutines.launch
 import org.example.protobuf.smart.SmartContractProto
 import java.math.BigInteger
+import androidx.core.net.toUri
 
 @RequiresApi(Build.VERSION_CODES.S)
 @Composable
@@ -278,7 +278,7 @@ fun SmartCardWidget(
                             onClick = {
                                 val intent = Intent(Intent.ACTION_VIEW).apply {
                                     data =
-                                        Uri.parse("https://tronscan.org/#/address/${item.smartContractAddress}")
+                                        "https://tronscan.org/#/address/${item.smartContractAddress}".toUri()
                                 }
                                 context.startActivity(intent)
                             },
@@ -582,7 +582,7 @@ fun SmartCardWidget2(
                             onClick = {
                                 val intent = Intent(Intent.ACTION_VIEW).apply {
                                     data =
-                                        Uri.parse("https://tronscan.org/#/address/${""}")
+                                        "https://tronscan.org/#/address/${""}".toUri()
                                 }
                                 context.startActivity(intent)
                             },

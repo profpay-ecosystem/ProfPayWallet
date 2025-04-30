@@ -1,7 +1,6 @@
 package com.example.telegramWallet.ui.new_feature.smartList
 
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -54,6 +53,7 @@ import com.example.telegramWallet.ui.new_feature.smartList.bottomSheets.bottomSh
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
+import androidx.core.net.toUri
 
 @Composable
 fun SmartHeaderInListFeature(
@@ -165,7 +165,7 @@ fun SmartHeaderInListFeature(
                                         val intent =
                                             Intent(Intent.ACTION_VIEW).apply {
                                                 data =
-                                                    Uri.parse("https://tronscan.org/#/address/${address}")
+                                                    "https://tronscan.org/#/address/${address}".toUri()
                                             }
                                         context.startActivity(intent)
                                         expandedDropdownMenu = false

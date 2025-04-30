@@ -58,6 +58,7 @@ import com.example.telegramWallet.ui.app.theme.GreenColor
 import com.example.telegramWallet.ui.shared.getTextValueTheme
 import com.example.telegramWallet.ui.shared.sharedPref
 import rememberStackedSnackbarHostState
+import androidx.core.content.edit
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -192,7 +193,7 @@ fun SettingsScreen(
                             ) {
                                 DropdownMenuItem(
                                     onClick = {
-                                        shared.edit().putInt("valueTheme", 0).apply()
+                                        shared.edit() { putInt("valueTheme", 0) }
                                         themeVM.getThemeApp(shared)
                                         themeSharedInt = 0
                                     },
@@ -218,7 +219,7 @@ fun SettingsScreen(
                                 )
                                 DropdownMenuItem(
                                     onClick = {
-                                        shared.edit().putInt("valueTheme", 1).apply()
+                                        shared.edit() { putInt("valueTheme", 1) }
                                         themeVM.getThemeApp(shared)
                                         themeSharedInt = 1
                                     },
@@ -244,7 +245,7 @@ fun SettingsScreen(
                                 )
                                 DropdownMenuItem(
                                     onClick = {
-                                        shared.edit().putInt("valueTheme", 2).apply()
+                                        shared.edit() { putInt("valueTheme", 2) }
                                         themeVM.getThemeApp(shared)
                                         themeSharedInt = 2
                                     },

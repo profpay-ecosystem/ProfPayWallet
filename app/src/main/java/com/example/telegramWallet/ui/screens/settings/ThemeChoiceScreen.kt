@@ -29,6 +29,7 @@ import com.example.telegramWallet.bridge.view_model.settings.ThemeViewModel
 import com.example.telegramWallet.ui.features.settings.row_button.RowSettingsButtonHidden
 import com.example.telegramWallet.ui.features.settings.row_button.RowSettingsButtonHiddenWithoutDivider
 import com.example.telegramWallet.ui.shared.sharedPref
+import androidx.core.content.edit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,7 +75,7 @@ fun ThemeChoiceScreen(goToBack: () -> Unit, themeVM: ThemeViewModel = hiltViewMo
                         RadioButton(
                             selected = (themeVar.intValue == 0),
                             onClick = {
-                                shared.edit().putInt("valueTheme", 0).apply()
+                                shared.edit() { putInt("valueTheme", 0) }
                                 themeVM.getThemeApp(shared)
                                 themeVar.intValue = 0
                             })
@@ -85,7 +86,7 @@ fun ThemeChoiceScreen(goToBack: () -> Unit, themeVM: ThemeViewModel = hiltViewMo
                         RadioButton(
                             selected = (themeVar.intValue == 1),
                             onClick = {
-                                shared.edit().putInt("valueTheme", 1).apply()
+                                shared.edit() { putInt("valueTheme", 1) }
                                 themeVM.getThemeApp(shared)
                                 themeVar.intValue = 1
                             })
@@ -97,7 +98,7 @@ fun ThemeChoiceScreen(goToBack: () -> Unit, themeVM: ThemeViewModel = hiltViewMo
                         RadioButton(
                             selected = (themeVar.intValue == 2),
                             onClick = {
-                                shared.edit().putInt("valueTheme", 2).apply()
+                                shared.edit() { putInt("valueTheme", 2) }
                                 themeVM.getThemeApp(shared)
                                 themeVar.intValue = 2
                             })

@@ -114,17 +114,15 @@ class PushReceiver : BroadcastReceiver(), CoroutineScope {
             val channelId = "PUSHY_SERVICE_CHANNEL"
             val notificationManager = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val channelName = "Pushy Channel Service"
-                val importance = NotificationManager.IMPORTANCE_DEFAULT
-                val notificationChannel = NotificationChannel(channelId, channelName, importance)
+            val channelName = "Pushy Channel Service"
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val notificationChannel = NotificationChannel(channelId, channelName, importance)
 
-                notificationChannel.enableLights(true)
-                notificationChannel.lightColor = Color.RED
-                notificationChannel.enableVibration(true)
-                notificationChannel.vibrationPattern = longArrayOf(0, 400, 250, 400)
-                notificationManager.createNotificationChannel(notificationChannel)
-            }
+            notificationChannel.enableLights(true)
+            notificationChannel.lightColor = Color.RED
+            notificationChannel.enableVibration(true)
+            notificationChannel.vibrationPattern = longArrayOf(0, 400, 250, 400)
+            notificationManager.createNotificationChannel(notificationChannel)
 
             val builder = NotificationCompat.Builder(context, channelId)
                 .setAutoCancel(true)

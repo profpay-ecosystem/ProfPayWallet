@@ -18,6 +18,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import com.example.telegramWallet.R
 import com.example.telegramWallet.ui.shared.sharedPref
+import androidx.core.content.edit
 
 @Composable
 fun FaceIDAuthentication(toNavigate: () -> Unit) {
@@ -47,7 +48,7 @@ fun FaceIDAuthentication(toNavigate: () -> Unit) {
                 object : BiometricPrompt.AuthenticationCallback() {
                     override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                         super.onAuthenticationSucceeded(result)
-                        sharedPref.edit().putBoolean("session_activity", true).apply()
+                        sharedPref.edit() { putBoolean("session_activity", true) }
                         authResult = "Authentication succeeded!"
                         toNavigate()
                     }

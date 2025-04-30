@@ -1,7 +1,6 @@
 package com.example.telegramWallet.ui.new_feature.smartList
 
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.infiniteRepeatable
@@ -39,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.telegramWallet.R
 import com.example.telegramWallet.ui.shared.sharedPref
+import androidx.core.net.toUri
 
 @Composable
 fun IsEmptyListSmartContract() {
@@ -74,7 +74,7 @@ fun IsEmptyListSmartContract() {
             elevation = CardDefaults.cardElevation(10.dp),
             onClick = {
                 val intent = Intent(Intent.ACTION_VIEW).apply {
-                    data = Uri.parse("https://t.me/ProfPay_bot?start=$appUniqueID")
+                    data = "https://t.me/ProfPay_bot?start=$appUniqueID".toUri()
                 }
                 context.startActivity(intent)
             }

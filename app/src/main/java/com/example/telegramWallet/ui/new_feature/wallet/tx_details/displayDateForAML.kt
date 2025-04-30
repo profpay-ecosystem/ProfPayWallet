@@ -10,7 +10,6 @@ import java.time.temporal.ChronoUnit
 import java.util.Locale
 
 
-@RequiresApi(Build.VERSION_CODES.O)
 fun displayDateForAML(timestamp: String): String {
     val outputFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.getDefault())
     val timestampMillis = timestamp.toLong() * 1000

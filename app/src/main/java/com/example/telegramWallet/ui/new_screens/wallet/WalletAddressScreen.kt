@@ -81,6 +81,7 @@ import kotlinx.coroutines.withContext
 import rememberStackedSnackbarHostState
 import java.math.BigInteger
 import java.text.DecimalFormat
+import androidx.core.content.edit
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -467,12 +468,12 @@ fun WalletAddressScreen(
                                 openDialog = !openDialog
                             } else {
                                 sharedPref
-                                    .edit()
-                                    .putString(
-                                        "address_for_receive",
-                                        address
-                                    )
-                                    .apply()
+                                    .edit() {
+                                        putString(
+                                            "address_for_receive",
+                                            address
+                                        )
+                                    }
                                 goToReceive()
                             }
 
@@ -497,9 +498,9 @@ fun WalletAddressScreen(
                     AlertDialogWidget(
                         onConfirmation = {
                             sharedPref
-                                .edit()
-                                .putString("address_for_receive", address)
-                                .apply()
+                                .edit() {
+                                    putString("address_for_receive", address)
+                                }
                             goToReceive()
                             openDialog = !openDialog
                         },
@@ -578,10 +579,12 @@ fun LazyListTransactionsFeature(
                                 CardHistoryTransactionsForWAFeature(
                                     goToSystemTRX = { goToSystemTRX() },
                                     onClick = {
-                                        sharedPref.edit().putLong(
-                                            "transaction_id",
-                                            item.transactionId!!
-                                        ).apply()
+                                        sharedPref.edit() {
+                                            putLong(
+                                                "transaction_id",
+                                                item.transactionId!!
+                                            )
+                                        }
                                         goToTXDetailsScreen()
                                     },
                                     paintIconId = currentTokenName.paintIconId,
@@ -602,10 +605,12 @@ fun LazyListTransactionsFeature(
 
                                 CardHistoryTransactionsFeature(
                                     onClick = {
-                                        sharedPref.edit().putLong(
-                                            "transaction_id",
-                                            item.transactionId!!
-                                        ).apply()
+                                        sharedPref.edit() {
+                                            putLong(
+                                                "transaction_id",
+                                                item.transactionId!!
+                                            )
+                                        }
                                         goToTXDetailsScreen()
                                     },
                                     paintIconId = currentTokenName.paintIconId,

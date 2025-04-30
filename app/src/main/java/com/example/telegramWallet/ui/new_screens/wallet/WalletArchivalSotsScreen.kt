@@ -63,6 +63,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.math.BigInteger
+import androidx.core.content.edit
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -325,9 +326,9 @@ fun CardArchivalAddress(goToWalletAddress: () -> Unit, addressWithTokens: Addres
             .height(IntrinsicSize.Min),
         elevation = CardDefaults.cardElevation(10.dp),
         onClick = {
-            sharedPref.edit()
-                .putString("address_for_wa", addressWithTokens.addressEntity.address)
-                .apply()
+            sharedPref.edit() {
+                putString("address_for_wa", addressWithTokens.addressEntity.address)
+            }
             goToWalletAddress()
         }
     ) {
