@@ -165,7 +165,7 @@ fun TitleCreateOrRecoveryWalletFeature(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.99f),
+            .fillMaxHeight(0.98f),
         verticalArrangement = Arrangement.Bottom,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
