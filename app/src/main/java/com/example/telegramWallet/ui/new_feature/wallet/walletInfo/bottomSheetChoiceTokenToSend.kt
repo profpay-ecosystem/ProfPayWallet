@@ -25,7 +25,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
@@ -76,7 +75,7 @@ fun bottomSheetChoiceTokenToSend(
                     style = MaterialTheme.typography.headlineSmall
                 )
             }
-            if (listTokensWithTotalBalance.isNotEmpty()) {
+            if (listTokensWithTotalBalance.any { it!!.balance != BigInteger.ZERO }) {
                 LazyColumn(
                     modifier = Modifier
                         .padding(
@@ -116,14 +115,15 @@ fun bottomSheetChoiceTokenToSend(
                     horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                     Icon(
-                        modifier = Modifier.size(40.dp).padding(bottom = 16.dp),
+                        modifier = Modifier.size(80.dp).padding(bottom = 16.dp),
                         imageVector = ImageVector.vectorResource(id = R.drawable.icon_search_to_file),
                         contentDescription = "NotSearch",
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
                     Text(
                         text = "Активы не найдены",
                         style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onPrimary
                         )
                 }
             }
