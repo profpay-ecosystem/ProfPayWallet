@@ -63,7 +63,6 @@ import com.example.telegramWallet.ui.app.theme.BackgroundIcon2
 import com.example.telegramWallet.ui.new_feature.wallet.HexagonShape
 import com.example.telegramWallet.ui.new_feature.wallet.HexagonsFeature
 import com.example.telegramWallet.ui.shared.sharedPref
-import dev.inmo.micro_utils.coroutines.launchSynchronously
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -92,15 +91,9 @@ fun WalletSotsScreen(
 
     val token = sharedPref().getString("token_name", TokenName.USDT.tokenName)
 
-    val addressWithTokens by remember {
-        launchSynchronously {
-            withContext(Dispatchers.IO) {
-                viewModel.getAddressesSotsWithTokensByBlockchainLD(
-                    walletId = walletId, blockchainName = TokenName.valueOf(token!!).blockchainName
-                )
-            }
-        }
-    }.observeAsState(emptyList())
+    val addressWithTokens by viewModel.getAddressesSotsWithTokensByBlockchainLD(
+        walletId = walletId, blockchainName = TokenName.valueOf(token!!).blockchainName
+    ).observeAsState(emptyList())
 
     val bottomPadding = sharedPref().getFloat("bottomPadding", 54f)
 
@@ -158,19 +151,6 @@ private fun SheetContent(
     val bottomPadding = sharedPref().getFloat("bottomPadding", 54f)
     val sharedPref = sharedPref()
     val tokenName = sharedPref.getString("token_name", TokenName.USDT.tokenName)
-
-    val sortedList = buildList {
-        val firstItem = addressList.firstOrNull { it.addressEntity.sotIndex.toInt() == 0 }
-        if (firstItem != null) {
-            add(firstItem)
-        }
-
-        val remaining = addressList
-            .filter { it != firstItem }
-            .sortedBy { it.addressEntity.sotIndex }
-
-        addAll(remaining)
-    }
 
     val listColors: List<Color> = listOf(
         Color(0xFF6A0E8D),

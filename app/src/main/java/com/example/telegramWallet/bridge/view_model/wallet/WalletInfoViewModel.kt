@@ -2,6 +2,7 @@ package com.example.telegramWallet.bridge.view_model.wallet
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.liveData
 import com.example.telegramWallet.backend.http.models.binance.BinanceSymbolEnum
 import com.example.telegramWallet.backend.http.models.coingecko.CoinSymbolEnum
 import com.example.telegramWallet.bridge.view_model.dto.TokenName
@@ -40,8 +41,10 @@ class WalletInfoViewModel @Inject constructor(
         return walletProfileRepo.getWalletNameById(walletId)
     }
 
-    suspend fun getAddressesSotsWithTokens(walletId: Long): LiveData<List<AddressWithTokens>> {
-        return addressRepo.getAddressesSotsWithTokensLD(walletId)
+    fun getAddressesSotsWithTokens(walletId: Long): LiveData<List<AddressWithTokens>> {
+        return liveData(Dispatchers.IO) {
+            emitSource(addressRepo.getAddressesSotsWithTokensLD(walletId))
+        }
     }
 
     suspend fun getListTransactionToTimestamp(listTransactions: List<TransactionModel>): List<List<TransactionModel?>> {
@@ -55,8 +58,10 @@ class WalletInfoViewModel @Inject constructor(
         return listListTransactions
     }
 
-    suspend fun getAllRelatedTransactions(walletId: Long): LiveData<List<TransactionModel>> {
-        return transactionsRepo.getAllRelatedTransactions(walletId)
+    fun getAllRelatedTransactions(walletId: Long): LiveData<List<TransactionModel>> {
+        return liveData(Dispatchers.IO) {
+            emitSource(transactionsRepo.getAllRelatedTransactions(walletId))
+        }
     }
 
     suspend fun updateTokenBalances(listAddressWithTokens: List<AddressWithTokens>) = coroutineScope {

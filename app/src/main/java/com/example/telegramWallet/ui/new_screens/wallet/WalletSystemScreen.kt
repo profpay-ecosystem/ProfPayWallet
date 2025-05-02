@@ -1,11 +1,7 @@
 package com.example.telegramWallet.ui.new_screens.wallet
 
-import StackedSnakbarHostState
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -23,7 +19,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -35,11 +30,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -82,37 +75,23 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.edit
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.telegramWallet.R
-import com.example.telegramWallet.backend.http.models.RegisterUserRequest
-import com.example.telegramWallet.backend.http.models.RegisterUserResponse
-import com.example.telegramWallet.backend.http.models.UserErrorResponse
-import com.example.telegramWallet.backend.http.user.RegisterApi
-import com.example.telegramWallet.backend.http.user.RegisterRequestCallback
-import com.example.telegramWallet.bridge.view_model.dto.transfer.TransferResult
 import com.example.telegramWallet.bridge.view_model.wallet.WalletSystemViewModel
-import com.example.telegramWallet.bridge.view_model.wallet.send.SendFromWalletViewModel
 import com.example.telegramWallet.data.database.dao.wallet.WalletProfileModel
-import com.example.telegramWallet.data.utils.toSunAmount
 import com.example.telegramWallet.ui.app.theme.BackgroundIcon2
-import com.example.telegramWallet.ui.app.theme.DarkBlue
 import com.example.telegramWallet.ui.app.theme.PubAddressDark
 import com.example.telegramWallet.ui.app.theme.RedColor
 import com.example.telegramWallet.ui.shared.sharedPref
 import com.example.telegramWallet.ui.widgets.dialog.AlertDialogWidget
-import dev.inmo.micro_utils.coroutines.launchSynchronously
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.example.protobuf.transfer.TransferProto.TransferToken
-import rememberStackedSnackbarHostState
-import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -125,9 +104,7 @@ fun WalletSystemScreen(
 
     val sharedPref = sharedPref()
 
-    val walletList by remember {
-        launchSynchronously { withContext(Dispatchers.IO) { viewModel.getListAllWallets() } }
-    }.observeAsState(initial = emptyList())
+    val walletList by viewModel.getListAllWallets().observeAsState(emptyList())
 
     val bottomPadding = sharedPref().getFloat("bottomPadding", 54f)
 
@@ -257,7 +234,6 @@ fun WalletSystemScreen(
 
 @Composable
 fun CardForWalletSystemFeature(
-    viewModel: WalletSystemViewModel = hiltViewModel(),
     wallet: WalletProfileModel,
     onClick: () -> Unit = {},
     selected: Boolean = false

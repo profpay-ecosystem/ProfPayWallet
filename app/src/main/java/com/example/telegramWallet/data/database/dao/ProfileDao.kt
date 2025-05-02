@@ -6,7 +6,6 @@ import androidx.room.Insert
 import androidx.room.Query
 import com.example.telegramWallet.bridge.view_model.dto.ProfileDto
 import com.example.telegramWallet.data.database.entities.ProfileEntity
-import dev.inmo.tgbotapi.types.UserId
 import kotlinx.coroutines.flow.Flow
 
 @Dao

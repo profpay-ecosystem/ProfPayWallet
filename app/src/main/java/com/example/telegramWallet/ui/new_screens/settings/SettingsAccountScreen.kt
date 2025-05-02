@@ -49,8 +49,9 @@ import com.example.telegramWallet.R
 import com.example.telegramWallet.bridge.view_model.settings.SettingsAccountViewModel
 import com.example.telegramWallet.ui.shared.sharedPref
 import com.example.telegramWallet.ui.widgets.SettingsBotWidget
-import dev.inmo.micro_utils.coroutines.launchSynchronously
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,16 +59,16 @@ fun SettingsAccountScreen(
     goToBack: () -> Unit,
     viewModel: SettingsAccountViewModel = hiltViewModel()
 ) {
-    val tgId = remember {
-        launchSynchronously { viewModel.getProfileTelegramId() }
-    }.observeAsState()
+    val tgId by viewModel.profileTelegramId.observeAsState()
+    val tgUsername by viewModel.profileTelegramUsername.observeAsState()
 
-    val tgUsername = remember {
-        launchSynchronously { viewModel.getProfileTgUsername() }
-    }.observeAsState()
+    val userId by produceState<Long?>(initialValue = null) {
+        value = viewModel.getProfileUserId()
+    }
 
-    val userId = remember { launchSynchronously { viewModel.getProfileUserId() } }
-    val appId = remember { launchSynchronously { viewModel.getProfileAppId() } }
+    val appId by produceState<String?>(initialValue = null) {
+        value = viewModel.getProfileAppId()
+    }
 
     LaunchedEffect(Unit) {
         viewModel.viewModelScope.launch {
@@ -182,14 +183,14 @@ fun SettingsAccountScreen(
                             modifier = Modifier
                                 .padding(top = 8.dp, bottom = 8.dp, start = 16.dp, end = 16.dp)
                         ) {
-                            if (tgId.value != null && tgId.value != 0L) {
+                            if (tgId != null && tgId != 0L) {
                                 RowSettingsAccountFeature(
                                     label = "Telegram ID:",
-                                    info = "${tgId.value}"
+                                    info = "$tgId"
                                 )
                                 RowSettingsAccountFeature(
                                     label = "Username:",
-                                    info = "@${tgUsername.value}"
+                                    info = "@${tgUsername}"
                                 )
                             } else {
                                 Text(
@@ -231,7 +232,7 @@ fun SettingsAccountScreen(
                             RowSettingsAccountFeature(label = "UNID:", info = "$userId")
                             RowSettingsAccountFeature(
                                 label = "APP ID:",
-                                info = appId,
+                                info = appId ?: "",
                                 byInfoShorted = true
                             )
                             RowSettingsAccountFeature(label = "Status:", info = "User")

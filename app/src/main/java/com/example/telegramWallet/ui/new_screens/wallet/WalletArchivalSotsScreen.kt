@@ -32,10 +32,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,6 +48,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.edit
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.telegramWallet.R
 import com.example.telegramWallet.bridge.view_model.dto.TokenName
@@ -58,12 +57,8 @@ import com.example.telegramWallet.data.database.models.AddressWithTokens
 import com.example.telegramWallet.data.utils.toTokenAmount
 import com.example.telegramWallet.ui.app.theme.BackgroundIcon
 import com.example.telegramWallet.ui.shared.sharedPref
-import dev.inmo.micro_utils.coroutines.launchSynchronously
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.math.BigInteger
-import androidx.core.content.edit
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -78,21 +73,11 @@ fun WalletArchivalSotsScreen(
     val sharedPref = sharedPref()
 
     val walletId = sharedPref.getLong("wallet_id", 1)
-    val token = sharedPref.getString("token_name", TokenName.USDT.tokenName)
+    val token = sharedPref.getString("token_name", TokenName.USDT.tokenName) ?: TokenName.USDT.tokenName
 
-    val addressWithTokensArchival by remember {
-        launchSynchronously {
-            withContext(Dispatchers.IO) {
-                viewModel.getAddressWithTokensArchivalByBlockchainLD(
-                    walletId = walletId, blockchainName = TokenName.valueOf(token!!).blockchainName
-                )
-            }
-        }
-    }.observeAsState(emptyList())
-
-    LaunchedEffect(addressWithTokensArchival) {
-
-    }
+    val addressWithTokensArchival by viewModel.getAddressWithTokensArchivalByBlockchainLD(
+        walletId = walletId, blockchainName = TokenName.valueOf(token).blockchainName
+    ).observeAsState(emptyList())
 
     val bottomPadding = sharedPref().getFloat("bottomPadding", 54f)
 
@@ -213,7 +198,6 @@ fun WalletArchivalSotsScreen(
                                 }
                             )
                         }
-
                     }
                     HorizontalPager(
                         state = pagerState, modifier = Modifier
@@ -262,7 +246,7 @@ fun WalletArchivalSotsScreen(
                             1 -> {
                                 val addressWTAWithFunds = viewModel.getAddressesWTAWithFunds(
                                     addressWithTokensArchival,
-                                    token!!
+                                    token
                                 )
                                 if (addressWTAWithFunds.isNotEmpty()) {
                                     LazyColumn(

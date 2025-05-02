@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.example.telegramWallet.backend.http.aml.DownloadAmlPdfApi
 import com.example.telegramWallet.backend.http.aml.DownloadAmlPdfRequestCallback
@@ -162,8 +163,10 @@ class TXDetailsViewModel @Inject constructor(
         }
     }
 
-    suspend fun getTransactionLiveDataById(transactionId: Long): LiveData<TransactionEntity> {
-        return transactionsRepo.getTransactionLiveDataById(transactionId)
+    fun getTransactionLiveDataById(transactionId: Long): LiveData<TransactionEntity> {
+        return liveData(Dispatchers.IO) {
+            emitSource(transactionsRepo.getTransactionLiveDataById(transactionId))
+        }
     }
 
     suspend fun isGeneralAddress(address: String): Boolean {

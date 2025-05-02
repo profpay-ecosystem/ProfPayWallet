@@ -2,11 +2,13 @@ package com.example.telegramWallet.bridge.view_model.wallet.walletSot
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.liveData
 import com.example.telegramWallet.data.database.models.AddressWithTokens
 import com.example.telegramWallet.data.database.repositories.wallet.AddressRepo
 import com.example.telegramWallet.data.database.repositories.wallet.TokenRepo
 import com.example.telegramWallet.data.database.repositories.wallet.WalletProfileRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import java.math.BigInteger
 import javax.inject.Inject
 
@@ -16,11 +18,13 @@ class WalletArchivalSotViewModel @Inject constructor(
     private val walletProfileRepo: WalletProfileRepo,
     private val tokenRepo: TokenRepo
 ) : ViewModel() {
-    suspend fun getAddressWithTokensArchivalByBlockchainLD(
+    fun getAddressWithTokensArchivalByBlockchainLD(
         walletId: Long,
         blockchainName: String
     ): LiveData<List<AddressWithTokens>> {
-        return addressRepo.getAddressesWithTokensArchivalByBlockchainLD(walletId, blockchainName)
+        return liveData(Dispatchers.IO) {
+            emitSource(addressRepo.getAddressesWithTokensArchivalByBlockchainLD(walletId, blockchainName))
+        }
     }
 
     fun getAddressesWTAWithFunds(

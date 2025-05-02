@@ -59,7 +59,6 @@ import com.example.telegramWallet.data.utils.toTokenAmount
 import com.example.telegramWallet.ui.new_feature.wallet.bottomSheetReissueAddress
 import com.example.telegramWallet.ui.shared.sharedPref
 import com.example.telegramWallet.utils.generateQRCode
-import dev.inmo.micro_utils.coroutines.launchSynchronously
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import rememberStackedSnackbarHostState
@@ -82,13 +81,7 @@ fun WalletSystemTRXScreen(
         }
     }
 
-    val centralAddress by remember {
-        launchSynchronously {
-            withContext(Dispatchers.IO) {
-                viewModel.centralAddressRepo.getCentralAddressLiveData()
-            }
-        }
-    }.observeAsState(initial = null)
+    val centralAddress by viewModel.getCentralAddressLiveData().observeAsState()
 
     LaunchedEffect(centralAddress) {
         if (centralAddress != null) {

@@ -66,7 +66,6 @@ import com.example.telegramWallet.ui.new_feature.wallet.tx_details.KnowAMLFeatur
 import com.example.telegramWallet.ui.new_feature.wallet.tx_details.UnknownAMLFeature
 import com.example.telegramWallet.ui.shared.sharedPref
 import com.example.telegramWallet.ui.widgets.dialog.AlertDialogWidget
-import dev.inmo.micro_utils.coroutines.launchSynchronously
 import io.sentry.Sentry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -94,13 +93,7 @@ fun TXDetailsScreen(
 
     val stackedSnackbarHostState = rememberStackedSnackbarHostState()
 
-    val transactionEntity by remember {
-        launchSynchronously {
-            withContext(Dispatchers.IO) {
-                viewModel.getTransactionLiveDataById(transactionId)
-            }
-        }
-    }.observeAsState(null)
+    val transactionEntity by viewModel.getTransactionLiveDataById(transactionId).observeAsState()
 
     val (walletName, setWalletName) = remember { mutableStateOf("") }
     val (isReceive, setIsReceive) = remember { mutableStateOf(false) }

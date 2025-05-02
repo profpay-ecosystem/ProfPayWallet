@@ -3,6 +3,7 @@ package com.example.telegramWallet.bridge.view_model.wallet.walletSot
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.liveData
 import com.example.telegramWallet.bridge.view_model.dto.BlockchainName
 import com.example.telegramWallet.data.database.entities.wallet.AddressEntity
 import com.example.telegramWallet.data.database.entities.wallet.TokenEntity
@@ -15,6 +16,7 @@ import com.example.telegramWallet.data.database.repositories.wallet.WalletProfil
 import com.example.telegramWallet.data.flow_db.repo.WalletSotRepo
 import com.example.telegramWallet.tron.Tron
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import java.math.BigInteger
 import javax.inject.Inject
 
@@ -29,8 +31,10 @@ class WalletSotViewModel @Inject constructor(
     private val tron: Tron
 ) : ViewModel() {
     // Получение списка адресов и балансов в формате Flow
-    suspend fun getAddressesSotsWithTokensByBlockchainLD(walletId: Long, blockchainName: String): LiveData<List<AddressWithTokens>> {
-        return addressRepo.getAddressesSotsWithTokensByBlockchainLD(walletId, blockchainName)
+    fun getAddressesSotsWithTokensByBlockchainLD(walletId: Long, blockchainName: String): LiveData<List<AddressWithTokens>> {
+        return liveData(Dispatchers.IO) {
+            emitSource(addressRepo.getAddressesSotsWithTokensByBlockchainLD(walletId, blockchainName))
+        }
     }
 
     suspend fun creationOfANewCell(walletId: Long, addressEntity: AddressEntity) {

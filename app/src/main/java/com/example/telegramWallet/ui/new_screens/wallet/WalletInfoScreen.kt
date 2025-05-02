@@ -71,7 +71,6 @@ import com.example.telegramWallet.ui.app.theme.RedColor
 import com.example.telegramWallet.ui.new_feature.wallet.walletInfo.CardForWalletInfoFeature
 import com.example.telegramWallet.ui.new_feature.wallet.walletInfo.bottomSheetChoiceTokenToSend
 import com.example.telegramWallet.ui.shared.sharedPref
-import dev.inmo.micro_utils.coroutines.launchSynchronously
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -96,25 +95,13 @@ fun WalletInfoScreen(
     val sharedPref = sharedPref()
     val walletId = sharedPref.getLong("wallet_id", 1)
 
-    val addressesSotsWithTokens by remember {
-        launchSynchronously {
-            withContext(Dispatchers.IO) {
-                viewModel.getAddressesSotsWithTokens(
-                    walletId = walletId
-                )
-            }
-        }
-    }.observeAsState(emptyList())
+    val addressesSotsWithTokens by viewModel.getAddressesSotsWithTokens(
+        walletId = walletId
+    ).observeAsState(emptyList())
 
-    val allRelatedTransaction by remember {
-        launchSynchronously {
-            withContext(Dispatchers.IO) {
-                viewModel.getAllRelatedTransactions(
-                    walletId = walletId
-                )
-            }
-        }
-    }.observeAsState(emptyList())
+    val allRelatedTransaction by viewModel.getAllRelatedTransactions(
+        walletId = walletId
+    ).observeAsState(emptyList())
 
     val (walletName, setWalletName) = remember { mutableStateOf("") }
     val (listTokensWithTotalBalance, setListTokensWithTotalBalance) = remember {
@@ -532,7 +519,6 @@ fun CardHistoryTransactionsFeature(
     onClick: () -> Unit = {}
 ) {
     val sharedPref = sharedPref()
-    val addressWa = sharedPref.getString("address_for_wa", "")
 
     val label = when (typeTransaction) {
         TransactionType.SEND.index -> "Отправлено"

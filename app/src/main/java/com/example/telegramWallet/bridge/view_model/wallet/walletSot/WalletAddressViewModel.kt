@@ -2,6 +2,7 @@ package com.example.telegramWallet.bridge.view_model.wallet.walletSot
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.liveData
 import com.example.telegramWallet.data.database.models.AddressWithTokens
 import com.example.telegramWallet.data.database.models.TransactionModel
 import com.example.telegramWallet.data.database.repositories.TransactionsRepo
@@ -19,16 +20,22 @@ class WalletAddressViewModel @Inject constructor(
     val tron: Tron
 ) : ViewModel() {
 
-    suspend fun getAddressWithTokensByAddressLD(address: String): LiveData<AddressWithTokens>{
-        return addressRepo.getAddressWithTokensByAddressLD(address)
+    fun getAddressWithTokensByAddressLD(address: String): LiveData<AddressWithTokens>{
+        return liveData(Dispatchers.IO) {
+            emitSource(addressRepo.getAddressWithTokensByAddressLD(address))
+        }
     }
 
-    suspend fun getTransactionsByAddressSenderAndTokenLD(walletId: Long, senderAddress: String, tokenName: String): LiveData<List<TransactionModel>> {
-        return transactionsRepo.getTransactionsByAddressSenderAndTokenLD(walletId, senderAddress, tokenName)
+    fun getTransactionsByAddressSenderAndTokenLD(walletId: Long, senderAddress: String, tokenName: String): LiveData<List<TransactionModel>> {
+        return liveData(Dispatchers.IO) {
+            emitSource(transactionsRepo.getTransactionsByAddressSenderAndTokenLD(walletId, senderAddress, tokenName))
+        }
     }
 
-    suspend fun getTransactionsByAddressReceiverAndTokenLD(walletId: Long, receiverAddress: String, tokenName: String): LiveData<List<TransactionModel>> {
-        return transactionsRepo.getTransactionsByAddressReceiverAndTokenLD(walletId, receiverAddress, tokenName)
+    fun getTransactionsByAddressReceiverAndTokenLD(walletId: Long, receiverAddress: String, tokenName: String): LiveData<List<TransactionModel>> {
+        return liveData(Dispatchers.IO) {
+            emitSource(transactionsRepo.getTransactionsByAddressReceiverAndTokenLD(walletId, receiverAddress, tokenName))
+        }
     }
 
     suspend fun getListTransactionToTimestamp(listTransactions: List<TransactionModel>): List<List<TransactionModel?>> {

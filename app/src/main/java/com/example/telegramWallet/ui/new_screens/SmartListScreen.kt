@@ -40,9 +40,11 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.telegramWallet.R
 import com.example.telegramWallet.bridge.view_model.smart_contract.GetSmartContractViewModel
+import com.example.telegramWallet.data.database.entities.wallet.SmartContractEntity
 import com.example.telegramWallet.data.utils.toTokenAmount
 import com.example.telegramWallet.ui.new_feature.smartList.AnimatedScrollToHideHeaderLazyColumn
 import com.example.telegramWallet.ui.new_feature.smartList.IsEmptyListSmartContract
@@ -52,7 +54,6 @@ import com.example.telegramWallet.ui.new_feature.smartList.SmartHeaderInListFeat
 import com.example.telegramWallet.ui.new_feature.smartList.bottomSheets.ProgressIndicatorSmartModalFeature
 import com.example.telegramWallet.ui.new_feature.smartList.bottomSheets.confirmationSmartModalFeature
 import com.example.telegramWallet.ui.shared.sharedPref
-import dev.inmo.micro_utils.coroutines.launchSynchronously
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import rememberStackedSnackbarHostState
@@ -78,19 +79,20 @@ fun SmartListScreen(
         }
     )
 
-    val smartContract by remember {
-        launchSynchronously {
-            withContext(Dispatchers.IO) {
-                viewModel.smartContractDatabaseRepo.getSmartContractLiveData()
-            }
-        }
-    }.observeAsState(initial = null)
+    var smartContractLD by remember { mutableStateOf<LiveData<SmartContractEntity?>?>(null) }
+    val smartContract = smartContractLD?.observeAsState(initial = null)
 
-    LaunchedEffect(smartContract) {
-        if (smartContract != null) {
+    LaunchedEffect(Unit) {
+        // Получаем LiveData внутри coroutine-контекста
+        smartContractLD = withContext(Dispatchers.IO) {
+            viewModel.smartContractDatabaseRepo.getSmartContractLiveData()
+        }
+    }
+
+    LaunchedEffect(smartContract?.value) {
+        smartContract?.value?.let {
             withContext(Dispatchers.IO) {
-                contractBalance =
-                    viewModel.tron.addressUtilities.getUsdtBalance(smartContract!!.contractAddress)
+                contractBalance = viewModel.tron.addressUtilities.getUsdtBalance(it.contractAddress)
             }
         }
     }
@@ -154,7 +156,7 @@ fun SmartListScreen(
                         if (smartContract != null) {
                             SmartHeaderInListFeature(
                                 balance = contractBalance.toTokenAmount(),
-                                address = smartContract?.contractAddress ?: "",
+                                address = smartContract.value?.contractAddress ?: "",
                                 viewModel = viewModel
                             )
                         } else {

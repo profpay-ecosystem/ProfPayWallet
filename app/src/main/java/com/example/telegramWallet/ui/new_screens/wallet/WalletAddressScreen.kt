@@ -42,6 +42,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -74,7 +75,6 @@ import com.example.telegramWallet.ui.new_feature.wallet.tx_details.bottomSheetRe
 import com.example.telegramWallet.ui.new_feature.wallet.tx_details.bottomSheetTransOnGeneralReceipt
 import com.example.telegramWallet.ui.shared.sharedPref
 import com.example.telegramWallet.ui.widgets.dialog.AlertDialogWidget
-import dev.inmo.micro_utils.coroutines.launchSynchronously
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -98,16 +98,10 @@ fun WalletAddressScreen(
     val coroutineScope = rememberCoroutineScope()
 
     val walletId = sharedPref.getLong("wallet_id", 1)
-    val address = sharedPref.getString("address_for_wa", "")
-    val tokenName = sharedPref.getString("token_name", TokenName.USDT.tokenName)
+    val address = sharedPref.getString("address_for_wa", "") ?: ""
+    val tokenName = sharedPref.getString("token_name", TokenName.USDT.tokenName) ?: TokenName.USDT.tokenName
 
-    val addressWithTokens by remember {
-        launchSynchronously {
-            withContext(Dispatchers.IO) {
-                viewModel.getAddressWithTokensByAddressLD(address!!)
-            }
-        }
-    }.observeAsState(initial = null)
+    val addressWithTokens by viewModel.getAddressWithTokensByAddressLD(address).observeAsState()
 
     val tokenNameObj = TokenName.entries.stream()
         .filter { it.tokenName == tokenName }
@@ -116,29 +110,16 @@ fun WalletAddressScreen(
 
     val tokenEntity: TokenEntity? =
         addressWithTokens?.tokens?.stream()?.filter { it.tokenName == tokenName }?.findFirst()
-            ?.orElse(TokenEntity(0, 1, "Usdt", BigInteger.ZERO))
+            ?.orElse(TokenEntity(0, 1, "USDT", BigInteger.ZERO))
 
-    val transactionsByAddressSender by remember {
-        launchSynchronously {
-            withContext(Dispatchers.IO) {
-                viewModel.getTransactionsByAddressSenderAndTokenLD(walletId, address!!, tokenName!!)
-            }
-        }
-    }.observeAsState(emptyList())
+    val transactionsByAddressSender by viewModel.getTransactionsByAddressSenderAndTokenLD(walletId,
+        address, tokenName
+    ).observeAsState(emptyList())
+    val transactionsByAddressReceiver by viewModel.getTransactionsByAddressReceiverAndTokenLD(walletId,
+        address, tokenName
+    ).observeAsState(emptyList())
 
-    val transactionsByAddressReceiver by remember {
-        launchSynchronously {
-            withContext(Dispatchers.IO) {
-                viewModel.getTransactionsByAddressReceiverAndTokenLD(
-                    walletId,
-                    address!!,
-                    tokenName!!
-                )
-            }
-        }
-    }.observeAsState(emptyList())
-
-    val allTransaction = transactionsByAddressSender + transactionsByAddressReceiver
+    val allTransaction: List<TransactionModel> = transactionsByAddressSender + transactionsByAddressReceiver
 
     val (groupedAllTransaction, setGroupedAllTransaction) = remember {
         mutableStateOf<List<List<TransactionModel?>>>(listOf(listOf(null)))
@@ -151,8 +132,6 @@ fun WalletAddressScreen(
     }
 
     val stackedSnackbarHostState = rememberStackedSnackbarHostState()
-
-
     val bottomPadding = sharedPref().getFloat("bottomPadding", 54f)
 
     Scaffold(
@@ -177,7 +156,7 @@ fun WalletAddressScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "${address!!.take(4)}...${address.takeLast(4)}",
+                        text = "${address.take(4)}...${address.takeLast(4)}",
                         style = MaterialTheme.typography.headlineSmall.copy(color = Color.White)
                     )
                 },
@@ -433,7 +412,7 @@ fun WalletAddressScreen(
                         .shadow(7.dp, RoundedCornerShape(10.dp))
                         .clickable {
                             addressWithTokens?.addressEntity?.addressId?.let {
-                                goToSendWalletAddress(it, tokenName!!)
+                                goToSendWalletAddress(it, tokenName)
                             }
                         },
                 ) {
@@ -668,10 +647,8 @@ fun CardHistoryTransactionsForWAFeature(
         snackbar = stackedSnackbarHostState
     )
 
-    val isGeneralAddressReceive by remember {
-        mutableStateOf(launchSynchronously {
-            withContext(Dispatchers.IO) { viewModel.isGeneralAddress(transactionEntity.receiverAddress) }
-        })
+    val isGeneralAddressReceive by produceState<Boolean?>(initialValue = null) {
+        value = viewModel.isGeneralAddress(transactionEntity.receiverAddress)
     }
 
     val isActivated by viewModel.isActivated.collectAsState()
@@ -771,8 +748,8 @@ fun CardHistoryTransactionsForWAFeature(
                     )
                 }
             }
-            if ((!isGeneralAddressReceive && typeTransaction == TransactionType.RECEIVE.index && !transactionEntity.isProcessed) ||
-                (!isGeneralAddressReceive && betweenYourselfReceiver && !transactionEntity.isProcessed)
+            if ((!isGeneralAddressReceive!! && typeTransaction == TransactionType.RECEIVE.index && !transactionEntity.isProcessed) ||
+                (!isGeneralAddressReceive!! && betweenYourselfReceiver && !transactionEntity.isProcessed)
             ) {
                 Row(
                     modifier = Modifier
