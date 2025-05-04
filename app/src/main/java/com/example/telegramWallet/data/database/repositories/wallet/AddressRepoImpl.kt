@@ -57,7 +57,9 @@ class AddressRepoImpl @Inject constructor(private val addressDao: AddressDao) : 
     }
 
     override suspend fun isGeneralAddress(address: String): Boolean {
-        return addressDao.isGeneralAddress(address)
+        return withContext(Dispatchers.IO) {
+            return@withContext addressDao.isGeneralAddress(address)
+        }
     }
 
     override suspend fun getAddressesSotsWithTokensByBlockchainLD(

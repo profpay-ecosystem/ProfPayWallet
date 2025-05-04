@@ -7,7 +7,7 @@ plugins {
     kotlin("kapt")
     id("com.google.dagger.hilt.android")
     id("com.google.devtools.ksp")
-    id("com.google.protobuf") version "0.9.4" apply true
+    id("com.google.protobuf") version "0.9.5" apply true
     kotlin("plugin.serialization") version "1.9.21"
     id("io.sentry.android.gradle") version "4.11.0"
 }
@@ -115,11 +115,11 @@ project.configurations.configureEach {
 
 protobuf {
     protoc {
-        artifact = "com.google.protobuf:protoc:3.17.3"
+        artifact = "com.google.protobuf:protoc:4.30.2"
     }
     plugins {
         id("grpc") {
-            artifact = "io.grpc:protoc-gen-grpc-java:1.63.0"
+            artifact = "io.grpc:protoc-gen-grpc-java:1.72.0"
         }
     }
     generateProtoTasks {
@@ -162,22 +162,16 @@ dependencies {
     implementation("androidx.biometric:biometric:1.1.0")
 
     // gRPC libs
-    implementation("com.google.protobuf:protobuf-java:3.25.1")
-    implementation("com.google.protobuf:protobuf-java-util:3.25.0")
+    implementation("com.google.protobuf:protobuf-java:4.30.2")
+    implementation("com.google.protobuf:protobuf-java-util:4.30.2")
 
     implementation("io.grpc:grpc-netty-shaded:1.60.1")
-    implementation("io.grpc:grpc-netty:1.45.1")
+    implementation("io.grpc:grpc-netty:1.60.0")
     implementation("io.grpc:grpc-protobuf:$grpcVersion")
     implementation("io.grpc:grpc-stub:$grpcVersion")
     implementation("io.grpc:grpc-okhttp:$grpcVersion")
 
-    implementation("org.bouncycastle:bcprov-jdk15on:1.68")
-
-    implementation(files("libs/utils-0.8.0.jar"))
-    implementation(files("libs/abi-0.8.0.jar"))
-    implementation(files("libs/core-0.8.0.jar"))
-
-    implementation("com.google.guava:guava:32.0.1-jre")
+    implementation("io.github.tronprotocol:trident:0.9.2")
     implementation(files("libs/bitcoinj-core-0.17-SNAPSHOT.jar"))
 
     implementation("androidx.navigation:navigation-compose:$navVersion")
@@ -254,13 +248,6 @@ dependencies {
     androidTestImplementation(platform("androidx.compose:compose-bom:2024.06.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     androidTestImplementation("org.mockito:mockito-android:4.8.0")
-    androidTestImplementation("com.google.truth:truth:1.1")
-    androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.10.0")
-    androidTestImplementation("androidx.hilt:hilt-testing:1.0.0")
-    androidTestImplementation("androidx.compose.ui:ui-test-manifest:1.8.0")
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.8.0")
-    androidTestImplementation("org.robolectric:robolectric:4.9")
-
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 

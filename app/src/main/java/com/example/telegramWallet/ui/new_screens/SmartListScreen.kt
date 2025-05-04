@@ -2,6 +2,7 @@ package com.example.telegramWallet.ui.new_screens
 
 import StackedSnackbarHost
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -153,10 +154,10 @@ fun SmartListScreen(
                         modifier = Modifier
                             .background(MaterialTheme.colorScheme.primary)
                     ) {
-                        if (smartContract != null) {
+                        if (smartContract?.value != null) {
                             SmartHeaderInListFeature(
                                 balance = contractBalance.toTokenAmount(),
-                                address = smartContract.value?.contractAddress ?: "",
+                                address = smartContract.value?.contractAddress,
                                 viewModel = viewModel
                             )
                         } else {

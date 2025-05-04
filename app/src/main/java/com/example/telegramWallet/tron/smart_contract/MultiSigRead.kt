@@ -1,6 +1,5 @@
 package com.example.telegramWallet.tron.smart_contract
 
-import com.example.telegramWallet.BuildConfig
 import org.tron.trident.abi.FunctionReturnDecoder
 import org.tron.trident.abi.TypeReference
 import org.tron.trident.abi.datatypes.Address
@@ -17,7 +16,7 @@ class MultiSigRead {
         val wrapper: ApiWrapper = ApiWrapper.ofNile(privateKey)
 
         val usdtFunc = Function("USDT", emptyList(), listOf(object : TypeReference<Address?>() {}))
-        val extension = wrapper.constantCall(ownerAddress, contractAddress, usdtFunc)
+        val extension = wrapper.triggerConstantContract(ownerAddress, contractAddress, usdtFunc)
         val result = Numeric.toHexString(extension.getConstantResult(0).toByteArray())
 
         val decodedResult = FunctionReturnDecoder.decode(result, usdtFunc.outputParameters)
@@ -27,18 +26,10 @@ class MultiSigRead {
 
     // returns openDeals, closedDeals 1
     fun getContractStats(ownerAddress: String, privateKey: String, contractAddress: String): Pair<String, String> {
-        val wrapper: ApiWrapper = if (BuildConfig.DEBUG) {
-            ApiWrapper.ofNile(privateKey)
-        } else {
-            ApiWrapper(
-                "5.39.223.8:59151",
-                "5.39.223.8:50061",
-                privateKey
-            )
-        }
+        val wrapper = ApiWrapper("5.39.223.8:59151", "5.39.223.8:50061", privateKey)
 
         val function = Function("getContractStats", emptyList(), listOf(object : TypeReference<Uint256?>() {}, object : TypeReference<Uint256?>() {}))
-        val extension = wrapper.constantCall(ownerAddress, contractAddress, function)
+        val extension = wrapper.triggerConstantContract(ownerAddress, contractAddress, function)
         val result = Numeric.toHexString(extension.getConstantResult(0).toByteArray())
 
         val decodedResult = FunctionReturnDecoder.decode(result, function.outputParameters)

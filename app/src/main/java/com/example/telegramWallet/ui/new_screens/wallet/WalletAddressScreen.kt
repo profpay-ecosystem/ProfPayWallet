@@ -647,7 +647,7 @@ fun CardHistoryTransactionsForWAFeature(
         snackbar = stackedSnackbarHostState
     )
 
-    val isGeneralAddressReceive by produceState<Boolean?>(initialValue = null) {
+    val isGeneralAddressReceive by produceState<Boolean>(initialValue = false) {
         value = viewModel.isGeneralAddress(transactionEntity.receiverAddress)
     }
 
@@ -748,8 +748,8 @@ fun CardHistoryTransactionsForWAFeature(
                     )
                 }
             }
-            if ((!isGeneralAddressReceive!! && typeTransaction == TransactionType.RECEIVE.index && !transactionEntity.isProcessed) ||
-                (!isGeneralAddressReceive!! && betweenYourselfReceiver && !transactionEntity.isProcessed)
+            if ((!isGeneralAddressReceive && typeTransaction == TransactionType.RECEIVE.index && !transactionEntity.isProcessed) ||
+                (!isGeneralAddressReceive && betweenYourselfReceiver && !transactionEntity.isProcessed)
             ) {
                 Row(
                     modifier = Modifier

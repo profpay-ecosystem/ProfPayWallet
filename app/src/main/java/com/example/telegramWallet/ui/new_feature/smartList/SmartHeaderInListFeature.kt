@@ -1,6 +1,7 @@
 package com.example.telegramWallet.ui.new_feature.smartList
 
 import android.content.Intent
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -58,7 +59,7 @@ import androidx.core.net.toUri
 @Composable
 fun SmartHeaderInListFeature(
     balance: BigDecimal,
-    address: String,
+    address: String?,
     viewModel: GetSmartContractViewModel,
 ) {
     val context = LocalContext.current
@@ -84,10 +85,12 @@ fun SmartHeaderInListFeature(
                 energy = AppConstants.SmartContract.PUBLISH_ENERGY_REQUIRED,
                 bandwidth = AppConstants.SmartContract.PUBLISH_BANDWIDTH_REQUIRED
             )
-// todo: java.lang.IndexOutOfBoundsException: Index: 0, появилась на строке ниже
-            val contractStats = viewModel.tron.smartContracts.multiSigRead.getContractStats("", "", address)
-            setOpenDeals(contractStats.first.toLong())
-            setClosedDeals(contractStats.second.toLong())
+
+            if (address != null) {
+                val contractStats = viewModel.tron.smartContracts.multiSigRead.getContractStats("", "", address)
+                setOpenDeals(contractStats.first.toLong())
+                setClosedDeals(contractStats.second.toLong())
+            }
         }
     }
 
@@ -137,8 +140,8 @@ fun SmartHeaderInListFeature(
                             ) {}
                             Spacer(modifier = Modifier.size(4.dp))
                             Text(
-                                text = "${address.take(4)}..." +
-                                        "${address.takeLast(4)} ",
+                                text = "${address?.take(4)}..." +
+                                        "${address?.takeLast(4)} ",
                                 fontSize = LocalFontSize.Small.fS,
                                 fontWeight = FontWeight.SemiBold,
                             )
@@ -154,7 +157,7 @@ fun SmartHeaderInListFeature(
                             ) {
                                 DropdownMenuItem(
                                     onClick = {
-                                        clipboardManager.setText(AnnotatedString(address))
+                                        clipboardManager.setText(AnnotatedString(address ?: ""))
                                         expandedDropdownMenu = false
                                     },
                                     text = { Text("Скопировать") }
