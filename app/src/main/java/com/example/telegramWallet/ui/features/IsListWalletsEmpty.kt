@@ -22,7 +22,7 @@ fun IsListWalletsEmpty() {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 10.dp, horizontal = 10.dp),
-            text = "У вас нет кошельков.",
+            text = "У вас нет кошельков..",
             style = TextStyle(
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
