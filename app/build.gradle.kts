@@ -251,8 +251,16 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2025.04.01"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.06.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    androidTestImplementation("org.mockito:mockito-android:4.8.0")
+    androidTestImplementation("com.google.truth:truth:1.1")
+    androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.10.0")
+    androidTestImplementation("androidx.hilt:hilt-testing:1.0.0")
+    androidTestImplementation("androidx.compose.ui:ui-test-manifest:1.8.0")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.8.0")
+    androidTestImplementation("org.robolectric:robolectric:4.9")
+
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
