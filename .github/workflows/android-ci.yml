@@ -36,7 +36,7 @@ jobs:
         run: ./gradlew assembleRelease
 
       - name: Upload APK to GitHub (Optional)
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: app-release
           path: app/build/outputs/apk/release/app-release.apk
