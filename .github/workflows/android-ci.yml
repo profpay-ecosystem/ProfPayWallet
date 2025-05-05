@@ -33,7 +33,7 @@ jobs:
           echo "android.useAndroidX=true" >> gradle.properties
           echo "kotlin.code.style=official" >> gradle.properties
           echo "android.nonTransitiveRClass=true" >> gradle.properties
-          echo "KEYSTORE_FILE=keystore/release-key.jks" >> gradle.properties
+          echo "KEYSTORE_FILE=../keystore/release-key.jks" >> gradle.properties
           echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> gradle.properties
           echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> gradle.properties
           echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> gradle.properties
