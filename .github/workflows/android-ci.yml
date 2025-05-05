@@ -22,9 +22,6 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Build with Gradle
-        run: ./gradlew build
-
       - name: Run tests
         run: ./gradlew test
 
@@ -39,10 +36,6 @@ jobs:
           echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> gradle.properties
           echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> gradle.properties
           echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> gradle.properties
-
-      - name: Check gradle.properties content
-        run: |
-          cat gradle.properties
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
