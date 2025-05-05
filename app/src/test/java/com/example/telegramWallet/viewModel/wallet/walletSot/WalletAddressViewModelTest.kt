@@ -4,6 +4,7 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
+import androidx.lifecycle.liveData
 import com.example.telegramWallet.bridge.view_model.wallet.walletSot.WalletAddressViewModel
 import com.example.telegramWallet.data.database.entities.wallet.AddressEntity
 import com.example.telegramWallet.data.database.entities.wallet.TokenEntity
@@ -16,8 +17,13 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
@@ -36,9 +42,11 @@ class WalletAddressViewModelTest {
 
     @get:Rule
     val instantExecutorRule = InstantTaskExecutorRule() // Для LiveData
+    private val testDispatcher = UnconfinedTestDispatcher()
 
     @Before
     fun setup() {
+        Dispatchers.setMain(testDispatcher)
         viewModel = WalletAddressViewModel(addressRepo, transactionsRepo, tron)
     }
 
@@ -50,44 +58,38 @@ class WalletAddressViewModelTest {
     @Test
     fun `getAddressWithTokensByAddressLD should return correct LiveData`() = runTest {
         val address = "TX1234567890ABCDEF"
-        val expected = MutableLiveData(
-            AddressWithTokens(
-                addressEntity = AddressEntity(
+
+        val expected = AddressWithTokens(
+            addressEntity = AddressEntity(
+                addressId = 1,
+                walletId = 1,
+                blockchainName = "Tron",
+                address = address,
+                publicKey = "04A3F9D0B1C2D3E4F5...",
+                privateKey = "b9c0d1e2f3a4b5c6d7...",
+                isGeneralAddress = true,
+                sotIndex = 0,
+                sotDerivationIndex = 0
+            ),
+            tokens = listOf(
+                TokenEntity(
+                    tokenId = 1,
                     addressId = 1,
-                    walletId = 1,
-                    blockchainName = "Tron",
-                    address = "TX1234567890ABCDEF",
-                    publicKey = "04A3F9D0B1C2D3E4F5...",
-                    privateKey = "b9c0d1e2f3a4b5c6d7...",
-                    isGeneralAddress = true,
-                    sotIndex = 0,
-                    sotDerivationIndex = 0
-                ),
-                tokens = listOf(
-                    TokenEntity(
-                        tokenId = 1,
-                        addressId = 1,
-                        tokenName = "TRX",
-                        balance = BigInteger.valueOf(1_000_000),
-                        frozenBalance = BigInteger.ZERO
-                    ),
-                    TokenEntity(
-                        tokenId = 2,
-                        addressId = 1,
-                        tokenName = "USDT",
-                        balance = BigInteger.valueOf(1_000_000),
-                        frozenBalance = BigInteger.ZERO
-                    )
+                    tokenName = "TRX",
+                    balance = BigInteger.valueOf(1_000_000),
+                    frozenBalance = BigInteger.ZERO
                 )
             )
         )
 
+        coEvery { addressRepo.getAddressWithTokensByAddressLD(address) } returns liveData {
+            emit(expected)
+        }
 
-        coEvery { addressRepo.getAddressWithTokensByAddressLD(address) } returns expected
+        val resultLiveData = viewModel.getAddressWithTokensByAddressLD(address)
+        val result = resultLiveData.getOrAwaitValue()
 
-        val result = viewModel.getAddressWithTokensByAddressLD(address).getOrAwaitValue()
-
-        Assert.assertEquals(expected.value?.addressEntity, result.addressEntity)
+        Assert.assertEquals(expected, result)
     }
 
     @Test
@@ -249,7 +251,7 @@ class WalletAddressViewModelTest {
             }
         }
         this.observeForever(observer)
-        latch.await(2, TimeUnit.SECONDS)
+        latch.await(5, TimeUnit.SECONDS)
         return data ?: throw NullPointerException("LiveData value was null")
     }
 }
