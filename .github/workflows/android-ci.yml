@@ -33,13 +33,16 @@ jobs:
           mkdir -p keystore
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore/release-key.jks
 
-      - name: Assemble release
+      - name: Set gradle.properties
         run: |
-          ./gradlew assembleRelease \
-            -PKEYSTORE_FILE=keystore/release-key.jks \
-            -PKEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }} \
-            -PKEY_ALIAS=${{ secrets.KEY_ALIAS }} \
-            -PKEY_PASSWORD=${{ secrets.KEY_PASSWORD }}
+          echo "KEYSTORE_FILE=keystore/release-key.jks" >> gradle.properties
+          echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> gradle.properties
+          echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> gradle.properties
+          echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> gradle.properties
+
+      - name: Check gradle.properties content
+        run: |
+          cat gradle.properties
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
