@@ -30,6 +30,15 @@ android {
     namespace = "com.example.telegramWallet"
     compileSdk = 34
 
+    signingConfigs {
+        create("release") {
+            storeFile = file(project.property("KEYSTORE_FILE") as String)
+            storePassword = project.property("KEYSTORE_PASSWORD") as String
+            keyAlias = project.property("KEY_ALIAS") as String
+            keyPassword = project.property("KEY_PASSWORD") as String
+        }
+    }
+
     defaultConfig {
         applicationId = "com.example.telegramWallet"
         minSdk = 29
@@ -73,7 +82,7 @@ android {
                 getDefaultProguardFile("proguard-android.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {

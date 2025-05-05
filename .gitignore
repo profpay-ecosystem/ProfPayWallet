@@ -13,3 +13,9 @@
 .cxx
 local.properties
 /.idea/.name
+*.jks
+/keystore/*
+gradle.properties
+/.gradle/*/
+/.gradle/config.properties
+/.gradle/file-system.probe

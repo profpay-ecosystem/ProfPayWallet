@@ -28,11 +28,29 @@ jobs:
       - name: Run tests
         run: ./gradlew test
 
-      - name: Build APK
+      - name: Decode keystore from secret
+        run: |
+          mkdir -p keystore
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore/release-key.jks
+
+      - name: Set gradle.properties
+        run: |
+          echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> gradle.properties
+          echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> gradle.properties
+          echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> gradle.properties
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build release APK
         run: ./gradlew assembleRelease
 
-      - name: Upload APK to GitHub (Optional)
+      - name: Find generated APK file
+        run: |
+          echo "APK_PATH=$(find app/build/outputs/apk/release -name '*.apk')" >> $GITHUB_ENV
+
+      - name: Upload signed APK
         uses: actions/upload-artifact@v4.6.2
         with:
           name: app-release
-          path: app/build/outputs/apk/release/app-release.apk
+          path: ${{ env.APK_PATH }}
