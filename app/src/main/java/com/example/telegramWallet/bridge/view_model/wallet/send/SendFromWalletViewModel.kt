@@ -112,9 +112,6 @@ class SendFromWalletViewModel @Inject constructor(
             return TransferResult.Failure(IllegalArgumentException("Комиссия должна быть больше 0"))
         }
 
-        val network =
-            if (BuildConfig.DEBUG) TransferNetwork.TESTNET_NILE else TransferNetwork.MAIN_NET
-
         val signedTxnBytesCommission = withContext(Dispatchers.IO) {
             tron.transactions.getSignedTrxTransaction(
                 fromAddress = addressSender.address,
@@ -208,7 +205,7 @@ class SendFromWalletViewModel @Inject constructor(
                         .setTxnBytes(signedTxnBytesCommission)
                         .setAmount(commission.toByteString())
                         .build(),
-                    network = network,
+                    network = TransferNetwork.MAIN_NET,
                     token = token,
                     txId = "null"
                 )

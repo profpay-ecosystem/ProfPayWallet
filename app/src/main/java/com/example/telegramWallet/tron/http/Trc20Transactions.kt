@@ -24,22 +24,11 @@ class Trc20TransactionsService {
     private val localJson = Json { ignoreUnknownKeys = true }
 
     fun makeRequest(callback: Trc20TransactionsRequestCallback, address: String) {
-        val tronHost: String
-        val contractAddress: String
-
-        if (BuildConfig.DEBUG) {
-            tronHost = "nile.trongrid.io"
-            contractAddress = "TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf"
-        } else {
-            tronHost = "api.trongrid.io"
-            contractAddress = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
-        }
         val http = HttpUrl.Builder()
             .scheme("https")
-            .host(tronHost)
+            .host("api.trongrid.io")
             .addPathSegments("v1/accounts/${address}/transactions/trc20")
-//            .addQueryParameter("only_confirmed", "true")
-            .addQueryParameter("contract_address", contractAddress)
+            .addQueryParameter("contract_address", "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t")
             .addQueryParameter("limit", "200")
             .build()
 

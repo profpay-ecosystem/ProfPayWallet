@@ -14,20 +14,15 @@ import org.tron.trident.utils.Numeric
 
 
 class SmartContract(val context: Context) {
-    suspend fun getSignedDeployMultiSigContract(
+    fun getSignedDeployMultiSigContract(
         ownerAddress: String,
         privateKey: String,
     ): ByteString? {
-        val wrapper: ApiWrapper = if (BuildConfig.DEBUG) {
-            ApiWrapper.ofNile(privateKey)
-        } else {
-            ApiWrapper(
-                "5.39.223.8:59151",
-                "5.39.223.8:50061",
-                privateKey
-            )
-        }
-        wrapper.keyPair
+        val wrapper = ApiWrapper(
+            "5.39.223.8:59151",
+            "5.39.223.8:50061",
+            privateKey
+        )
         val assetManager: AssetManager = context.assets
         val byteCode: String = convertInputStreamToString(assetManager.open("bytecode.txt")) // созданный байткод
         val abi: String = convertInputStreamToString(assetManager.open("abi.txt")) // созданный аби

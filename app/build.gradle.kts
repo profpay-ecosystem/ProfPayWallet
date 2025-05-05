@@ -42,9 +42,8 @@ android {
     defaultConfig {
         applicationId = "com.example.telegramWallet"
         minSdk = 29
-//        minSdk = 25 изменено на 29
         targetSdk = 34
-        versionCode = 2
+        versionCode = 3
 
 //        MAJOR: Внесение изменений, ломающих обратную совместимость.
 //        MINOR: Добавление новых функций без нарушения совместимости.
@@ -75,14 +74,36 @@ android {
 
     buildTypes {
         release {
-//            isDebuggable = true
             isMinifyEnabled = false
             isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android.txt"),
                 "proguard-rules.pro"
             )
+
             signingConfig = signingConfigs.getByName("release")
+            buildConfigField("Boolean", "IS_STAGING", "false")
+        }
+        debug {
+            isDebuggable = true
+            isMinifyEnabled = false
+            isShrinkResources = false
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+
+            signingConfig = signingConfigs.getByName("debug")
+            buildConfigField("Boolean", "IS_STAGING", "false")
+        }
+        create("staging") {
+            initWith(getByName("release"))
+            isDebuggable = true
+            isMinifyEnabled = false
+            isShrinkResources = false
+            applicationIdSuffix = ".staging"
+            versionNameSuffix = "-staging"
+
+            signingConfig = signingConfigs.getByName("release")
+            buildConfigField("Boolean", "IS_STAGING", "true")
         }
     }
     compileOptions {
@@ -149,7 +170,7 @@ buildscript {
 
     dependencies {
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.21")
-        classpath("com.google.protobuf:protobuf-gradle-plugin:0.9.4")
+        classpath("com.google.protobuf:protobuf-gradle-plugin:0.9.5")
         classpath("com.google.gms:google-services:4.4.2")
         classpath(kotlin("serialization", version = "1.9.21"))
     }
