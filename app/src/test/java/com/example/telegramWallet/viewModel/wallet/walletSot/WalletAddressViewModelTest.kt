@@ -82,9 +82,7 @@ class WalletAddressViewModelTest {
             )
         )
 
-        coEvery { addressRepo.getAddressWithTokensByAddressLD(address) } returns liveData {
-            emit(expected)
-        }
+        coEvery { addressRepo.getAddressWithTokensByAddressLD(address) } returns MutableLiveData(expected)
 
         val resultLiveData = viewModel.getAddressWithTokensByAddressLD(address)
         val result = resultLiveData.getOrAwaitValue()
