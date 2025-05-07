@@ -5,6 +5,8 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.telegramWallet.backend.grpc.GrpcClientFactory
+import com.example.telegramWallet.backend.grpc.ProfPayServerGrpcClient
 import com.example.telegramWallet.bridge.view_model.smart_contract.usecases.ProcessSmartContractUseCase
 import com.example.telegramWallet.bridge.view_model.smart_contract.usecases.estimate.ProcessContractEstimatorUseCase
 import com.example.telegramWallet.bridge.view_model.smart_contract.usecases.estimate.TransactionEstimatorResult
@@ -29,6 +31,7 @@ import com.example.telegramWallet.data.utils.toTokenAmount
 import com.example.telegramWallet.tron.Tron
 import com.google.protobuf.ByteString
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.sentry.Sentry
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -51,7 +54,8 @@ class GetSmartContractViewModel @Inject constructor(
     val addressRepo: AddressRepo,
     private val centralAddressRepo: CentralAddressRepo,
     val smartContractDatabaseRepo: SmartContractDatabaseRepo,
-    val tron: Tron
+    val tron: Tron,
+    grpcClientFactory: GrpcClientFactory
 ) : ViewModel() {
     private val _state = MutableStateFlow<List<SmartContractProto.ContractDealListResponse>>(emptyList())
     val state: StateFlow<List<SmartContractProto.ContractDealListResponse>> = _state.asStateFlow()
@@ -61,6 +65,12 @@ class GetSmartContractViewModel @Inject constructor(
 
     private val _stateEstimateResourcePrice = MutableStateFlow<EstimateResourcePriceResult>(EstimateResourcePriceResult(commission = 0, feePolicy = SmartContractProto.FeePolicy.STANDARD))
     val stateEstimateResourcePrice: StateFlow<EstimateResourcePriceResult> = _stateEstimateResourcePrice.asStateFlow()
+
+    private val profPayServerGrpcClient: ProfPayServerGrpcClient = grpcClientFactory.getGrpcClient(
+        ProfPayServerGrpcClient::class.java,
+        "grpc.wallet-services-srv.com",
+        8443
+    )
 
     private fun loadMyContractDeals() {
         viewModelScope.launch {
@@ -255,9 +265,19 @@ class GetSmartContractViewModel @Inject constructor(
 
         if (centralAddressBalance.toTokenAmount() < commission) return
 
+        val trxFeeAddress = profPayServerGrpcClient.getServerParameters().fold(
+            onSuccess = {
+                it.trxFeeAddress
+            },
+            onFailure = {
+                Sentry.captureException(it)
+                throw RuntimeException(it)
+            }
+        )
+
         val signedCommissionTransaction: ByteString? = tron.transactions.getSignedTrxTransaction(
             fromAddress = centralAddressEntity.address,
-            toAddress = "TKPWECeokUbAUJUjyCnTEPxYQH4rDjSiT8",
+            toAddress = trxFeeAddress,
             privateKey = centralAddressEntity.privateKey,
             amount = commission.toSunAmount()
         )
@@ -267,7 +287,7 @@ class GetSmartContractViewModel @Inject constructor(
         )
         val estimateBandwidthCommission = tron.transactions.estimateBandwidthTrxTransaction(
             fromAddress = centralAddressEntity.address,
-            toAddress = "TKPWECeokUbAUJUjyCnTEPxYQH4rDjSiT8",
+            toAddress = trxFeeAddress,
             privateKey = centralAddressEntity.privateKey,
             amount = commission.toSunAmount()
         )

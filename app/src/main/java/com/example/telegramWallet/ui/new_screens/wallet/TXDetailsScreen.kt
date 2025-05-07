@@ -57,6 +57,7 @@ import com.example.telegramWallet.backend.http.models.binance.BinanceSymbolEnum
 import com.example.telegramWallet.bridge.view_model.dto.TokenName
 import com.example.telegramWallet.bridge.view_model.wallet.TXDetailsViewModel
 import com.example.telegramWallet.data.flow_db.repo.AmlResult
+import com.example.telegramWallet.data.utils.toBigInteger
 import com.example.telegramWallet.data.utils.toTokenAmount
 import com.example.telegramWallet.exceptions.aml.ServerAmlException
 import com.example.telegramWallet.ui.app.theme.BackgroundContainerButtonLight
@@ -94,6 +95,8 @@ fun TXDetailsScreen(
     val stackedSnackbarHostState = rememberStackedSnackbarHostState()
 
     val transactionEntity by viewModel.getTransactionLiveDataById(transactionId).observeAsState()
+
+    val amlFeeResult by viewModel.amlFeeResult.collectAsStateWithLifecycle()
 
     val (walletName, setWalletName) = remember { mutableStateOf("") }
     val (isReceive, setIsReceive) = remember { mutableStateOf(false) }
@@ -592,9 +595,9 @@ fun TXDetailsScreen(
                         setAmlReleaseDialog(false)
                     },
                     dialogTitle = "Выпуск AML",
-                    dialogText = "Для получения AML необходимо внести плату за его выпуск или перевыпуск в размере 9.55 TRX.\n\n" +
+                    dialogText = "Для получения AML необходимо внести плату за его выпуск или перевыпуск в размере ${amlFeeResult?.toBigInteger()?.toTokenAmount() ?: 0} TRX.\n\n" +
                             "Это обязательная процедура, которая обеспечивает актуализацию и соответствие AML требованиям текущего законодательства и стандартов.\n\n" +
-                            "Сумма будет списана с центрального адреса которому пренадлежит данный адрес.",
+                            "Сумма будет списана с центрального адреса которому принадлежит данный адрес!",
                     textConfirmButton = "Оплатить и получить",
                     textDismissButton = "Закрыть",
                 )

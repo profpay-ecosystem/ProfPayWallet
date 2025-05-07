@@ -30,6 +30,7 @@ class GrpcClientFactory @Inject constructor() {
                 CryptoAddressGrpcClient::class.java -> CryptoAddressGrpcClient(channel)
                 SmartContractGrpcClient::class.java -> SmartContractGrpcClient(channel)
                 UserGrpcClient::class.java -> UserGrpcClient(channel)
+                ProfPayServerGrpcClient::class.java -> ProfPayServerGrpcClient(channel)
                 else -> throw IllegalArgumentException("Неизвестный gRPC-клиент: ${clientClass.simpleName}")
             }
         } as T

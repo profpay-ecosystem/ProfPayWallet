@@ -4,6 +4,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.telegramWallet.BuildConfig
+import com.example.telegramWallet.backend.grpc.GrpcClientFactory
+import com.example.telegramWallet.backend.grpc.ProfPayServerGrpcClient
 import com.example.telegramWallet.backend.http.models.binance.BinanceSymbolEnum
 import com.example.telegramWallet.bridge.view_model.dto.TokenName
 import com.example.telegramWallet.bridge.view_model.dto.transfer.TransferResult
@@ -46,13 +48,19 @@ class SendFromWalletViewModel @Inject constructor(
     val profileRepo: ProfileRepo,
     val tokenRepo: TokenRepo,
     private val sendFromWalletRepo: SendFromWalletRepo,
-    private val centralAddressRepo: CentralAddressRepo,
     val tron: Tron,
     val exchangeRatesRepo: ExchangeRatesRepo,
+    grpcClientFactory: GrpcClientFactory
 ) : ViewModel() {
     private val _stateCommission =
         MutableStateFlow<EstimateCommissionResult>(EstimateCommissionResult.Empty)
     val stateCommission: StateFlow<EstimateCommissionResult> = _stateCommission.asStateFlow()
+
+    private val profPayServerGrpcClient: ProfPayServerGrpcClient = grpcClientFactory.getGrpcClient(
+        ProfPayServerGrpcClient::class.java,
+        "grpc.wallet-services-srv.com",
+        8443
+    )
 
     suspend fun trxToUsdtRate(): BigDecimal {
         val trxToUsdtRate =
@@ -112,10 +120,20 @@ class SendFromWalletViewModel @Inject constructor(
             return TransferResult.Failure(IllegalArgumentException("Комиссия должна быть больше 0"))
         }
 
+        val trxFeeAddress = profPayServerGrpcClient.getServerParameters().fold(
+            onSuccess = {
+                it.trxFeeAddress
+            },
+            onFailure = {
+                Sentry.captureException(it)
+                throw RuntimeException(it)
+            }
+        )
+
         val signedTxnBytesCommission = withContext(Dispatchers.IO) {
             tron.transactions.getSignedTrxTransaction(
                 fromAddress = addressSender.address,
-                toAddress = "TKPWECeokUbAUJUjyCnTEPxYQH4rDjSiT8",
+                toAddress = trxFeeAddress,
                 privateKey = addressSender.privateKey,
                 amount = commission
             )
@@ -124,7 +142,7 @@ class SendFromWalletViewModel @Inject constructor(
         val estimateCommissionBandwidth = withContext(Dispatchers.IO) {
             tron.transactions.estimateBandwidthTrxTransaction(
                 fromAddress = addressSender.address,
-                toAddress = "TKPWECeokUbAUJUjyCnTEPxYQH4rDjSiT8",
+                toAddress = trxFeeAddress,
                 privateKey = addressSender.privateKey,
                 amount = commission
             )

@@ -7,6 +7,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
+import com.example.telegramWallet.backend.grpc.GrpcClientFactory
+import com.example.telegramWallet.backend.grpc.ProfPayServerGrpcClient
+import com.example.telegramWallet.backend.grpc.SmartContractGrpcClient
 import com.example.telegramWallet.backend.http.aml.DownloadAmlPdfApi
 import com.example.telegramWallet.backend.http.aml.DownloadAmlPdfRequestCallback
 import com.example.telegramWallet.bridge.view_model.dto.transfer.TransferResult
@@ -22,6 +25,7 @@ import com.example.telegramWallet.data.flow_db.repo.AmlResult
 import com.example.telegramWallet.data.flow_db.repo.EstimateCommissionResult
 import com.example.telegramWallet.data.flow_db.repo.TXDetailsRepo
 import com.example.telegramWallet.data.flow_db.repo.TransactionStatusResult
+import com.example.telegramWallet.data.utils.toBigInteger
 import com.example.telegramWallet.data.utils.toByteString
 import com.example.telegramWallet.data.utils.toSunAmount
 import com.example.telegramWallet.data.utils.toTokenAmount
@@ -34,8 +38,11 @@ import com.google.protobuf.ByteString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.sentry.Sentry
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -60,9 +67,9 @@ class TXDetailsViewModel @Inject constructor(
     val transactionsRepo: TransactionsRepo,
     val addressRepo: AddressRepo,
     private val tokenRepo: TokenRepo,
-    private val centralAddressRepo: CentralAddressRepo,
     val exchangeRatesRepo: ExchangeRatesRepo,
-    val tron: Tron
+    val tron: Tron,
+    grpcClientFactory: GrpcClientFactory
 ) : ViewModel() {
     private val _state = MutableStateFlow<AmlResult>(AmlResult.Empty)
     val state: StateFlow<AmlResult> = _state.asStateFlow()
@@ -77,6 +84,32 @@ class TXDetailsViewModel @Inject constructor(
 
     private val _isActivated = MutableStateFlow<Boolean>(false)
     val isActivated: StateFlow<Boolean> = _isActivated
+
+    private val _amlFeeResult = MutableStateFlow<ByteString?>(null)
+    val amlFeeResult: StateFlow<ByteString?> = _amlFeeResult.asStateFlow()
+
+    private val profPayServerGrpcClient: ProfPayServerGrpcClient = grpcClientFactory.getGrpcClient(
+        ProfPayServerGrpcClient::class.java,
+        "grpc.wallet-services-srv.com",
+        8443
+    )
+
+    fun getAmlFeeResult() {
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                profPayServerGrpcClient.getServerParameters()
+            }
+
+            result.fold(
+                onSuccess = { _amlFeeResult.emit(it.amlFee) },
+                onFailure = { Sentry.captureException(it) }
+            )
+        }
+    }
+
+    init {
+        getAmlFeeResult()
+    }
 
     fun checkActivation(address: String) {
         viewModelScope.launch {
@@ -95,22 +128,33 @@ class TXDetailsViewModel @Inject constructor(
         val balance = tron.addressUtilities.getTrxBalance(generalAddress.address)
         val userId = profileRepo.getProfileUserId()
 
-        if (balance.toTokenAmount().toDouble() < 9.55) {
+        val serverParameters = profPayServerGrpcClient.getServerParameters().fold(
+            onSuccess = { it },
+            onFailure = {
+                Sentry.captureException(it)
+                return Pair(false, "Сервер недоступен")
+            }
+        )
+
+        val amlFeeValue = serverParameters.amlFee
+        val trxFeeAddress = serverParameters.trxFeeAddress
+
+        if (balance.toTokenAmount() < amlFeeValue.toBigInteger().toTokenAmount()) {
             return Pair(false, "Недостаточно средств на балансе.")
         }
 
         val signedTxnBytes = tron.transactions.getSignedTrxTransaction(
             fromAddress = generalAddress.address,
-            toAddress = "TKPWECeokUbAUJUjyCnTEPxYQH4rDjSiT8",
+            toAddress = trxFeeAddress,
             privateKey = generalAddress.privateKey,
-            amount = BigDecimal.valueOf(9.55).toSunAmount()
+            amount = amlFeeValue.toBigInteger().toTokenAmount().toSunAmount()
         )
 
         val estimateBandwidth = tron.transactions.estimateBandwidth(
             fromAddress = generalAddress.address,
-            toAddress = "TKPWECeokUbAUJUjyCnTEPxYQH4rDjSiT8",
+            toAddress = trxFeeAddress,
             privateKey = generalAddress.privateKey,
-            amount = BigDecimal.valueOf(9.55).toSunAmount()
+            amount = amlFeeValue.toBigInteger().toTokenAmount().toSunAmount()
         )
 
         txDetailsRepo.processAmlPayment(
@@ -122,12 +166,11 @@ class TXDetailsViewModel @Inject constructor(
                     AmlTransactionDetails.newBuilder()
                         .setAddress(generalAddress.address)
                         .setBandwidthRequired(estimateBandwidth.bandwidth)
-                        .setTxnBytes(signedTxnBytes!!)
+                        .setTxnBytes(signedTxnBytes)
                         .build()
                 )
                 .build()
         )
-//        tokenRepo.increaseTronFrozenBalanceViaId(toSun(9.55.toDouble()), generalAddress.addressId!!, "TRX")
         return Pair(true, "Успешное действие, ожидайте уведомление.")
     }
 
@@ -233,18 +276,28 @@ class TXDetailsViewModel @Inject constructor(
             amount - commission
         } else amount
 
+        val trxFeeAddress = profPayServerGrpcClient.getServerParameters().fold(
+            onSuccess = {
+                it.trxFeeAddress
+            },
+            onFailure = {
+                Sentry.captureException(it)
+                return TransferResult.Failure(it)
+            }
+        )
+
         val token: TransferToken =
             if (transaction.tokenName == "TRX") TransferToken.TRX else TransferToken.USDT_TRC20
 
         val signedTxnBytesCommission = tron.transactions.getSignedTrxTransaction(
             fromAddress = commissionAddressEntity.address,
-            toAddress = "TKPWECeokUbAUJUjyCnTEPxYQH4rDjSiT8",
+            toAddress = trxFeeAddress,
             privateKey = commissionAddressEntity.privateKey,
             amount = commission
         )
         val estimateCommissionBandwidth = tron.transactions.estimateBandwidthTrxTransaction(
             fromAddress = commissionAddressEntity.address,
-            toAddress = "TKPWECeokUbAUJUjyCnTEPxYQH4rDjSiT8",
+            toAddress = trxFeeAddress,
             privateKey = commissionAddressEntity.privateKey,
             amount = commission
         )
@@ -392,15 +445,25 @@ class TXDetailsViewModel @Inject constructor(
             transaction.amount - commission
         } else transaction.amount
 
+        val trxFeeAddress = profPayServerGrpcClient.getServerParameters().fold(
+            onSuccess = {
+                it.trxFeeAddress
+            },
+            onFailure = {
+                Sentry.captureException(it)
+                return TransferResult.Failure(it)
+            }
+        )
+
         val signedTxnBytesCommission = tron.transactions.getSignedTrxTransaction(
             fromAddress = commissionAddressEntity.address,
-            toAddress = "TKPWECeokUbAUJUjyCnTEPxYQH4rDjSiT8",
+            toAddress = trxFeeAddress,
             privateKey = commissionAddressEntity.privateKey,
             amount = commission
         )
         val estimateCommissionBandwidth = tron.transactions.estimateBandwidthTrxTransaction(
             fromAddress = commissionAddressEntity.address,
-            toAddress = "TKPWECeokUbAUJUjyCnTEPxYQH4rDjSiT8",
+            toAddress = trxFeeAddress,
             privateKey = commissionAddressEntity.privateKey,
             amount = commission
         )

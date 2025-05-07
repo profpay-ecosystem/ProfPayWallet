@@ -1,8 +1,11 @@
 package com.example.telegramWallet.bridge.view_model.smart_contract.usecases
 
+import com.example.telegramWallet.backend.grpc.GrpcClientFactory
+import com.example.telegramWallet.backend.grpc.ProfPayServerGrpcClient
 import com.example.telegramWallet.data.database.repositories.wallet.AddressRepo
 import com.example.telegramWallet.tron.Tron
 import com.google.protobuf.ByteString
+import io.sentry.Sentry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.example.protobuf.smart.SmartContractProto
@@ -11,8 +14,15 @@ import javax.inject.Inject
 
 class CommissionFeeBuilder @Inject constructor(
     private val addressRepo: AddressRepo,
-    private val tron: Tron
+    private val tron: Tron,
+    grpcClientFactory: GrpcClientFactory
 ) {
+    private val profPayServerGrpcClient: ProfPayServerGrpcClient = grpcClientFactory.getGrpcClient(
+        ProfPayServerGrpcClient::class.java,
+        "grpc.wallet-services-srv.com",
+        8443
+    )
+
     suspend fun build(commission: BigInteger, userId: Long, deal: SmartContractProto.ContractDealListResponse): CommissionFeeBuilderResult {
         val address = if (userId == deal.buyer.userId) {
             deal.buyer.address
@@ -24,10 +34,20 @@ class CommissionFeeBuilder @Inject constructor(
             addressRepo.getAddressEntityByAddress(address)
         } ?: return CommissionFeeBuilderResult.Error("Address data is null")
 
+        val trxFeeAddress = profPayServerGrpcClient.getServerParameters().fold(
+            onSuccess = {
+                it.trxFeeAddress
+            },
+            onFailure = {
+                Sentry.captureException(it)
+                throw RuntimeException(it)
+            }
+        )
+
         val signedTxnBytesCommission = withContext(Dispatchers.IO) {
             tron.transactions.getSignedTrxTransaction(
                 fromAddress = addressData.address,
-                toAddress = "TKPWECeokUbAUJUjyCnTEPxYQH4rDjSiT8",
+                toAddress = trxFeeAddress,
                 privateKey = addressData.privateKey,
                 amount = commission
             )
@@ -36,7 +56,7 @@ class CommissionFeeBuilder @Inject constructor(
         val estimateCommissionBandwidth = withContext(Dispatchers.IO) {
             tron.transactions.estimateBandwidthTrxTransaction(
                 fromAddress = addressData.address,
-                toAddress = "TKPWECeokUbAUJUjyCnTEPxYQH4rDjSiT8",
+                toAddress = trxFeeAddress,
                 privateKey = addressData.privateKey,
                 amount = commission
             )

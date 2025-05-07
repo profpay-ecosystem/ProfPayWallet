@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+package proto;
+
+option java_package = "org.server.protobuf.prof_pay_server";
+option java_outer_classname = "ProfPayServerProto";
+
+service ProfPayServer {
+  rpc GetServerStatus(google.protobuf.Empty) returns(GetServerStatusResponse);
+  rpc GetServerParameters(google.protobuf.Empty) returns(GetServerParametersResponse);
+}
+
+message GetServerStatusResponse {
+  google.protobuf.Timestamp timestamp = 1;
+}
+
+message GetServerParametersResponse {
+  string trx_fee_address = 1;
+  bytes aml_fee = 2;
+  google.protobuf.Timestamp timestamp = 3;
+}

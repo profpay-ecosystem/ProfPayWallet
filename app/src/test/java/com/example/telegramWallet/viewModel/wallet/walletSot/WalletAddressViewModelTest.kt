@@ -37,7 +37,7 @@ class WalletAddressViewModelTest {
     private val tron: Tron = mockk()
 
     @get:Rule
-    val instantExecutorRule = InstantTaskExecutorRule() // Для LiveData
+    val instantExecutorRule = InstantTaskExecutorRule()
     private val testDispatcher = UnconfinedTestDispatcher()
 
     @Before
@@ -52,7 +52,7 @@ class WalletAddressViewModelTest {
     }
 
     @Test
-    fun `getAddressWithTokensByAddressLD should return correct LiveData`() = runTest {
+    fun getAddressWithTokensByAddressLD_shouldReturnCorrectLiveData() = runTest {
         val address = "TX1234567890ABCDEF"
 
         val expected = AddressWithTokens(
@@ -87,7 +87,7 @@ class WalletAddressViewModelTest {
     }
 
     @Test
-    fun `getTransactionsByAddressSenderAndTokenLD should return correct LiveData`() = runTest {
+    fun getTransactionsByAddressSenderAndToken_ShouldReturnCorrectLiveData() = runTest {
         // Given
         val walletId = 1L
         val senderAddress = "TXabc123"
@@ -129,7 +129,7 @@ class WalletAddressViewModelTest {
     }
 
     @Test
-    fun `getTransactionsByAddressReceiverAndTokenLD should return correct LiveData`() = runTest {
+    fun getTransactionsByAddressReceiverAndToken_ShouldReturnCorrectLiveData() = runTest {
         val walletId = 1L
         val receiverAddress = "TXzzz999"
         val tokenName = "TRX"
@@ -174,7 +174,7 @@ class WalletAddressViewModelTest {
     }
 
     @Test
-    fun `getListTransactionToTimestamp groups and sorts transactions correctly`() = runTest {
+    fun getListTransactionToTimestamp_ShouldGroupAndSortTransactionsCorrectly() = runTest {
         val transactions = listOf(
             TransactionModel(
                 transactionId = 1,
