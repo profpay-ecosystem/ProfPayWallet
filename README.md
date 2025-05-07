@@ -1,4 +1,4 @@
-# ProfPay Wallet
+# ProfPay
 
 ## 🌐 Language
 - [English](README.md)
@@ -19,7 +19,7 @@ Please see [LICENSE](./LICENSE) for full terms.
 
 ## 💼 About the Project
 
-**ProfPay Wallet** is a cryptocurrency wallet designed for secure transactions using **USDT (TRC20)** and **TRX**.  
+**ProfPay** is a cryptocurrency wallet designed for secure transactions using **USDT (TRC20)** and **TRX**.  
 The wallet is equipped with a smart contract system for handling USDT TRC20 transactions, providing advanced security features to protect users' funds.
 
 Key features:
