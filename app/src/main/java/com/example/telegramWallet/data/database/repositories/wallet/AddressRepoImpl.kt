@@ -21,10 +21,14 @@ interface AddressRepo {
     suspend fun getAddressesSotsWithTokensByBlockchain(blockchainName: String): List<AddressWithTokens>
     suspend fun getAddressesSotsWithTokensLD(walletId: Long): LiveData<List<AddressWithTokens>>
     suspend fun getAddressEntityById(id: Long): AddressEntity?
-    suspend fun getGeneralAddressWithTokens(
+    suspend fun getGeneralAddressWithTokensLiveData(
         addressId: Long,
         blockchainName: String
     ): LiveData<AddressWithTokens>
+    suspend fun getGeneralAddressWithTokens(
+        addressId: Long,
+        blockchainName: String
+    ): AddressWithTokens
     suspend fun getAddressWithTokens(
         addressId: Long,
         blockchainName: String
@@ -85,10 +89,19 @@ class AddressRepoImpl @Inject constructor(private val addressDao: AddressDao) : 
         }
     }
 
-    override suspend fun getGeneralAddressWithTokens(
+    override suspend fun getGeneralAddressWithTokensLiveData(
         addressId: Long,
         blockchainName: String
     ): LiveData<AddressWithTokens> {
+        return withContext(Dispatchers.IO) {
+            return@withContext addressDao.getGeneralAddressWithTokensLiveData(addressId, blockchainName)
+        }
+    }
+
+    override suspend fun getGeneralAddressWithTokens(
+        addressId: Long,
+        blockchainName: String
+    ): AddressWithTokens {
         return withContext(Dispatchers.IO) {
             return@withContext addressDao.getGeneralAddressWithTokens(addressId, blockchainName)
         }

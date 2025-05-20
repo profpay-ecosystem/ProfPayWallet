@@ -1,9 +1,7 @@
 package com.example.telegramWallet.bridge.view_model.wallet.send
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.telegramWallet.BuildConfig
 import com.example.telegramWallet.backend.grpc.GrpcClientFactory
 import com.example.telegramWallet.backend.grpc.ProfPayServerGrpcClient
 import com.example.telegramWallet.backend.http.models.binance.BinanceSymbolEnum
@@ -12,7 +10,6 @@ import com.example.telegramWallet.bridge.view_model.dto.transfer.TransferResult
 import com.example.telegramWallet.data.database.models.AddressWithTokens
 import com.example.telegramWallet.data.database.repositories.ProfileRepo
 import com.example.telegramWallet.data.database.repositories.wallet.AddressRepo
-import com.example.telegramWallet.data.database.repositories.wallet.CentralAddressRepo
 import com.example.telegramWallet.data.database.repositories.wallet.ExchangeRatesRepo
 import com.example.telegramWallet.data.database.repositories.wallet.TokenRepo
 import com.example.telegramWallet.data.flow_db.repo.EstimateCommissionResult
@@ -32,6 +29,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.example.protobuf.transfer.TransferProto
@@ -41,6 +39,17 @@ import org.example.protobuf.transfer.TransferProto.TransferToken
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
+
+data class TransferUiState(
+    val addressWithTokens: AddressWithTokens? = null,
+    val isAddressActivated: Boolean = true,
+    val isValidRecipientAddress: Boolean = true,
+    val isEnoughBalance: Boolean = true,
+    val warning: String? = null,
+    val commission: BigDecimal = BigDecimal.ZERO,
+    val tokenBalance: BigInteger = BigInteger.ZERO,
+    val isButtonEnabled: Boolean = false
+)
 
 @HiltViewModel
 class SendFromWalletViewModel @Inject constructor(
@@ -56,11 +65,72 @@ class SendFromWalletViewModel @Inject constructor(
         MutableStateFlow<EstimateCommissionResult>(EstimateCommissionResult.Empty)
     val stateCommission: StateFlow<EstimateCommissionResult> = _stateCommission.asStateFlow()
 
+    private val _uiState = MutableStateFlow(TransferUiState())
+    val uiState: StateFlow<TransferUiState> = _uiState.asStateFlow()
+
     private val profPayServerGrpcClient: ProfPayServerGrpcClient = grpcClientFactory.getGrpcClient(
         ProfPayServerGrpcClient::class.java,
         "grpc.wallet-services-srv.com",
         8443
     )
+
+    fun loadAddressWithTokens(addressId: Long, blockchain: String, tokenName: String) {
+        viewModelScope.launch {
+            val addressWithTokens = getGeneralAddressWithTokens(addressId, blockchain)
+            val isActivated = tron.addressUtilities.isAddressActivated(addressWithTokens.addressEntity.address)
+            val token = addressWithTokens.tokens.find { it.tokenName == tokenName }
+            val balance = token?.getBalanceWithoutFrozen()?.toTokenAmount() ?: BigDecimal.ZERO
+
+            _uiState.update {
+                it.copy(
+                    addressWithTokens = addressWithTokens,
+                    isAddressActivated = isActivated,
+                    tokenBalance = balance.toSunAmount(),
+                    warning = if (!isActivated) "Перевод невозможен. Нужно активировать адрес, отправив 20 TRX." else null
+                )
+            }
+        }
+    }
+
+    fun updateInputs(addressTo: String, sum: String, tokenName: TokenName) {
+        viewModelScope.launch {
+            val isValidAddress = tron.addressUtilities.isValidTronAddress(addressTo)
+            val addressEntity = _uiState.value.addressWithTokens ?: return@launch
+            val token = addressEntity.tokens.find { it.tokenName == tokenName.tokenName }
+            val balance = token?.getBalanceWithoutFrozen()?.toTokenAmount() ?: BigDecimal.ZERO
+            val amount = sum.toBigDecimalOrNull() ?: BigDecimal.ZERO
+
+            if (isValidAddress) {
+                estimateCommissions(addressEntity, sum, addressTo, tokenName)
+            }
+
+            val isEnough = amount <= balance
+
+            _uiState.update {
+                it.copy(
+                    isValidRecipientAddress = isValidAddress,
+                    isEnoughBalance = isEnough,
+                    isButtonEnabled = isValidAddress && isEnough && amount > BigDecimal.ZERO,
+                    warning = if (!isValidAddress && addressTo != "") "Невалидный адрес" else if (!isEnough) "Недостаточно средств" else null
+                )
+            }
+        }
+    }
+
+    fun onCommissionResult(result: EstimateCommissionResult) {
+        when (result) {
+            is EstimateCommissionResult.Success -> {
+                _uiState.update { it.copy(commission = result.response.commission.toBigDecimal()) }
+            }
+
+            is EstimateCommissionResult.Error -> {
+                _uiState.update { it.copy(warning = "Ошибка при расчёте комиссии") }
+                Sentry.captureException(result.throwable)
+            }
+
+            else -> {}
+        }
+    }
 
     suspend fun trxToUsdtRate(): BigDecimal {
         val trxToUsdtRate =
@@ -70,23 +140,16 @@ class SendFromWalletViewModel @Inject constructor(
 
     private suspend fun estimateCommission(address: String, bandwidth: Long, energy: Long) {
         sendFromWalletRepo.estimateCommission(address, bandwidth, energy)
-        sendFromWalletRepo.estimateCommission.collect { comission ->
-            _stateCommission.value = comission
+        sendFromWalletRepo.estimateCommission.collect { commission ->
+            _stateCommission.value = commission
         }
     }
 
     suspend fun getGeneralAddressWithTokens(
         addressId: Long,
         blockchainName: String
-    ): LiveData<AddressWithTokens> {
+    ): AddressWithTokens {
         return addressRepo.getGeneralAddressWithTokens(addressId, blockchainName)
-    }
-
-    suspend fun getAddressWithTokens(
-        addressId: Long,
-        blockchainName: String
-    ): LiveData<AddressWithTokens> {
-        return addressRepo.getAddressWithTokens(addressId, blockchainName)
     }
 
     suspend fun transferProcess(

@@ -2,6 +2,7 @@ package com.example.telegramWallet.ui.new_screens.wallet
 
 import StackedSnackbarHost
 import StackedSnakbarHostState
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -45,12 +46,10 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -69,15 +68,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.example.telegramWallet.R
 import com.example.telegramWallet.bridge.view_model.dto.TokenName
 import com.example.telegramWallet.bridge.view_model.dto.transfer.TransferResult
 import com.example.telegramWallet.bridge.view_model.wallet.send.SendFromWalletViewModel
-import com.example.telegramWallet.data.database.models.AddressWithTokens
-import com.example.telegramWallet.data.flow_db.repo.EstimateCommissionResult
 import com.example.telegramWallet.data.utils.toSunAmount
 import com.example.telegramWallet.data.utils.toTokenAmount
 import com.example.telegramWallet.ui.app.theme.BackgroundContainerButtonLight
@@ -87,12 +83,9 @@ import com.example.telegramWallet.ui.app.theme.ProgressIndicator
 import com.example.telegramWallet.ui.app.theme.PubAddressDark
 import com.example.telegramWallet.ui.app.theme.RedColor
 import com.example.telegramWallet.ui.shared.sharedPref
-import io.sentry.Sentry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.example.protobuf.transfer.TransferProto.TransferToken
@@ -113,103 +106,24 @@ fun SendFromWalletInfoScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
 
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     val tokenNameModel = TokenName.valueOf(tokenName)
     val currentTokenName = TokenName.entries.find { it.tokenName == tokenName } ?: TokenName.USDT
 
-    val addressWithTokensLiveData = remember(addressId, tokenNameModel.blockchainName) {
-        mutableStateOf<LiveData<AddressWithTokens>?>(null)
-    }
-    LaunchedEffect(addressId, tokenNameModel.blockchainName) {
-        addressWithTokensLiveData.value = try {
-            viewModel.getGeneralAddressWithTokens(addressId, tokenNameModel.blockchainName)
-        } catch (e: Exception) {
-            null
-        }
-    }
-    val addressWithTokens = addressWithTokensLiveData.value?.observeAsState()?.value
-
     var addressSending by remember { mutableStateOf("") }
     var sumSending by remember { mutableStateOf("") }
-    var isButtonVisible by remember { mutableStateOf(false) }
-    var isNotEnoughCash by remember { mutableStateOf(false) }
 
-
-    var warningState by remember { mutableStateOf(Pair("", false)) }
-    val (balanceToken, setBalanceToken) = remember { mutableStateOf(BigInteger.ZERO) }
-
-    val (commissionOnTransaction, setCommissionOnTransaction) = remember { mutableStateOf(BigDecimal.ZERO) }
-
-    val isNextSysTRX by remember { mutableStateOf(false) }
-
-    LaunchedEffect(addressWithTokens) {
-        addressWithTokens?.let { entity ->
-            val isAddressActivated = withContext(Dispatchers.IO) {
-                viewModel.tron.addressUtilities.isAddressActivated(entity.addressEntity.address)
-            }
-
-            if (!isAddressActivated) {
-                warningState =
-                    "Перевод невозможен. Нужно активировать адрес, отправив 20 TRX." to true
-            }
-            entity.tokens.find { it.tokenName == tokenName }
-                ?.getBalanceWithoutFrozen()
-                ?.let { setBalanceToken(it) }
-        }
+    LaunchedEffect(Unit) {
+        viewModel.loadAddressWithTokens(addressId, tokenNameModel.blockchainName, currentTokenName.tokenName)
     }
 
-    LaunchedEffect(addressSending) {
-        if (addressWithTokens != null) {
-            if (viewModel.tron.addressUtilities.isValidTronAddress(addressSending)) {
-                viewModel.estimateCommissions(
-                    addressWithTokens,
-                    sumSending,
-                    addressSending,
-                    tokenNameModel
-                )
-                warningState = "" to false
-                if (sumSending != "") isButtonVisible = true
-            } else {
-                warningState =
-                    "Указан невалидный адрес получателя средств. Пожалуйста, перепроверьте." to true
-                isButtonVisible = false
-            }
-        }
-    }
-
-    LaunchedEffect(sumSending) {
-        val amount = sumSending.toDoubleOrNull() ?: 0.0
-        if (amount > 0) {
-            viewModel.estimateCommissions(
-                addressWithTokens,
-                sumSending,
-                addressSending,
-                tokenNameModel
-            )
-
-            isButtonVisible =
-                addressWithTokens != null && amount.toBigDecimal() <= balanceToken.toTokenAmount()
-            isNotEnoughCash = !isButtonVisible
-        } else {
-            isButtonVisible = false
-        }
+    LaunchedEffect(addressSending, sumSending) {
+        viewModel.updateInputs(addressSending, sumSending, currentTokenName)
     }
 
     LaunchedEffect(viewModel.stateCommission.collectAsStateWithLifecycle().value) {
-        when (val state = viewModel.stateCommission.value) {
-            is EstimateCommissionResult.Success -> {
-                setCommissionOnTransaction(state.response.commission.toBigDecimal())
-
-                val amount = sumSending.toDoubleOrNull() ?: 0.0
-                if (amount > 0) isButtonVisible = true
-            }
-
-            is EstimateCommissionResult.Error -> {
-                warningState = "Серверная ошибка при обработке комиссии" to true
-                Sentry.captureException(state.throwable)
-            }
-
-            else -> {}
-        }
+        viewModel.onCommissionResult(viewModel.stateCommission.value)
     }
 
     val stackedSnackbarHostState = rememberStackedSnackbarHostState()
@@ -219,8 +133,8 @@ fun SendFromWalletInfoScreen(
             tokenName = tokenNameModel,
             addressSenderId = addressId,
             addressSending = addressSending,
-            addressSender = addressWithTokens?.addressEntity?.address ?: "",
-            commissionOnTransaction = commissionOnTransaction,
+            addressSender = uiState.addressWithTokens?.addressEntity?.address ?: "",
+            commissionOnTransaction = uiState.commission,
         ),
         snackbar = stackedSnackbarHostState
     )
@@ -366,7 +280,7 @@ fun SendFromWalletInfoScreen(
                         Row(verticalAlignment = Alignment.Bottom) {
                             Text(
                                 modifier = Modifier.padding(end = 4.dp),
-                                text = balanceToken.toTokenAmount().toString(),
+                                text = uiState.tokenBalance.toTokenAmount().toString(),
                                 style = MaterialTheme.typography.bodyLarge
 //                                color = PubAddressDark
                             )
@@ -414,7 +328,7 @@ fun SendFromWalletInfoScreen(
                                         modifier = Modifier.padding(end = 8.dp),
                                         elevation = CardDefaults.cardElevation(7.dp),
                                         onClick = {
-                                            sumSending = balanceToken.toTokenAmount().toString()
+                                            sumSending = uiState.tokenBalance.toTokenAmount().toString()
                                         }
                                     ) {
                                         Text(
@@ -445,16 +359,7 @@ fun SendFromWalletInfoScreen(
                         )
                     }
 
-
-                    if (isNotEnoughCash) {
-                        Text(
-                            text = "Недостаточно средств",
-                            color = RedColor,
-                            modifier = Modifier.padding(start = 4.dp, top = 4.dp)
-                        )
-                    }
-
-                    if (warningState.second) {
+                    if (uiState.warning != null) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth(),
@@ -472,10 +377,10 @@ fun SendFromWalletInfoScreen(
                                 Text(
                                     modifier = Modifier
                                         .padding(8.dp),
-                                    text = warningState.first,
+                                    text = uiState.warning!!,
                                     color = RedColor
                                 )
-                                if (isNextSysTRX) {
+                                if (!uiState.isAddressActivated) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.End
@@ -514,9 +419,11 @@ fun SendFromWalletInfoScreen(
                     ) {
                         Button(
                             onClick = {
-                                setIsOpenTransferProcessingSheet(true)
+                                if (viewModel.tron.addressUtilities.isValidTronAddress(addressSending)) {
+                                    setIsOpenTransferProcessingSheet(true)
+                                }
                             },
-                            enabled = isButtonVisible,
+                            enabled = uiState.isButtonEnabled,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(IntrinsicSize.Min)
@@ -561,7 +468,6 @@ fun bottomSheetTransferConfirmation(
         confirmValueChange = { false }
     )
     val coroutineScope = rememberCoroutineScope()
-    val stackedSnackbarHostState = rememberStackedSnackbarHostState()
     val (isOpenSheet, setIsOpenSheet) = remember { mutableStateOf(false) }
 
     val (isConfirmTransaction, setIsConfirmTransaction) = remember { mutableStateOf(false) }
@@ -652,8 +558,6 @@ fun bottomSheetTransferConfirmation(
                                             setIsOpenSheet(false)
                                         }
                                     }
-
-                                    null -> {}
                                 }
                             }
                         }

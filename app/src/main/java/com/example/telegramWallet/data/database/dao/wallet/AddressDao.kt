@@ -41,10 +41,21 @@ interface AddressDao {
                 "AND addresses.blockchain_name = :blockchainName " +
                 "AND addresses.is_general_address = 1"
     )
-    fun getGeneralAddressWithTokens(
+    fun getGeneralAddressWithTokensLiveData(
         addressId: Long,
         blockchainName: String
     ): LiveData<AddressWithTokens>
+
+    @Query(
+        "SELECT * FROM addresses " +
+                "WHERE addresses.address_id = :addressId " +
+                "AND addresses.blockchain_name = :blockchainName " +
+                "AND addresses.is_general_address = 1"
+    )
+    fun getGeneralAddressWithTokens(
+        addressId: Long,
+        blockchainName: String
+    ): AddressWithTokens
 
     @Transaction
     @Query(
