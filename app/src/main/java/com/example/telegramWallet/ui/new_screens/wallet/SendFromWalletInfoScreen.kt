@@ -2,7 +2,6 @@ package com.example.telegramWallet.ui.new_screens.wallet
 
 import StackedSnackbarHost
 import StackedSnakbarHostState
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
