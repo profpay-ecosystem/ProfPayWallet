@@ -162,24 +162,29 @@ class SendFromWalletViewModel @Inject constructor(
             ?: return TransferResult.Failure(IllegalStateException("Адрес отправителя не найден"))
 
         val balance = tron.addressUtilities.getTrxBalance(addressSender.address).toTokenAmount()
+        val amountToken = amount.toTokenAmount()
+        val commissionToken = commission.toTokenAmount()
+        val createAccountFee = tron.addressUtilities
+            .getCreateNewAccountFeeInSystemContract()
+            .toTokenAmount()
+
         if (token == TransferToken.TRX) {
-            val netAmount: Double = if (tron.addressUtilities.isAddressActivated(toAddress)) {
-                (balance.toDouble() - amount.toTokenAmount().toDouble()) - commission.toTokenAmount().toDouble()
+            val netAmount: BigDecimal = if (tron.addressUtilities.isAddressActivated(toAddress)) {
+                balance.subtract(amountToken).subtract(commissionToken)
             } else {
-                (balance.toDouble() - amount.toTokenAmount().toDouble()) - commission.toTokenAmount().toDouble() -
-                        tron.addressUtilities.getCreateNewAccountFeeInSystemContract().toTokenAmount().toDouble()
+                balance.subtract(amountToken).subtract(commissionToken).subtract(createAccountFee)
             }
 
-            if (netAmount < 0.0) {
+            if (netAmount < BigDecimal.ZERO) {
                 return TransferResult.Failure(IllegalStateException("Перевод невозможен, так как суммы недостаточно с учетом комиссии"))
             }
         } else {
-            if (balance.toDouble() < commission.toTokenAmount().toDouble()) {
+            if (balance < commission.toTokenAmount()) {
                 return TransferResult.Failure(IllegalStateException("Недостаточно TRX для комиссии"))
             }
         }
 
-        if (commission.toTokenAmount().toDouble() <= 0.0) {
+        if (commission.toTokenAmount() <= BigDecimal.ZERO) {
             return TransferResult.Failure(IllegalArgumentException("Комиссия должна быть больше 0"))
         }
 

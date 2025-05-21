@@ -9,7 +9,6 @@ import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.example.telegramWallet.backend.grpc.GrpcClientFactory
 import com.example.telegramWallet.backend.grpc.ProfPayServerGrpcClient
-import com.example.telegramWallet.backend.grpc.SmartContractGrpcClient
 import com.example.telegramWallet.backend.http.aml.DownloadAmlPdfApi
 import com.example.telegramWallet.backend.http.aml.DownloadAmlPdfRequestCallback
 import com.example.telegramWallet.bridge.view_model.dto.transfer.TransferResult
@@ -17,7 +16,6 @@ import com.example.telegramWallet.data.database.entities.wallet.TransactionEntit
 import com.example.telegramWallet.data.database.repositories.ProfileRepo
 import com.example.telegramWallet.data.database.repositories.TransactionsRepo
 import com.example.telegramWallet.data.database.repositories.wallet.AddressRepo
-import com.example.telegramWallet.data.database.repositories.wallet.CentralAddressRepo
 import com.example.telegramWallet.data.database.repositories.wallet.ExchangeRatesRepo
 import com.example.telegramWallet.data.database.repositories.wallet.TokenRepo
 import com.example.telegramWallet.data.database.repositories.wallet.WalletProfileRepo
@@ -38,11 +36,8 @@ import com.google.protobuf.ByteString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.sentry.Sentry
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -190,13 +185,6 @@ class TXDetailsViewModel @Inject constructor(
         return data
     }
 
-    suspend fun renewAmlFromTransactionId(address: String, tx: String, tokenName: String) {
-        txDetailsRepo.renewAmlFromTransactionId(address = address, tx = tx, tokenName = tokenName)
-        txDetailsRepo.aml.collect { aml ->
-            _state.value = aml
-        }
-    }
-
     fun getTransactionStatus(txId: String) {
         viewModelScope.launch {
             txDetailsRepo.getTransactionStatus(txId = txId)
@@ -226,7 +214,7 @@ class TXDetailsViewModel @Inject constructor(
         amount: BigInteger,
         commission: BigInteger
     ): TransferResult {
-        if (commission.toTokenAmount().toDouble() <= 0.0) {
+        if (commission.toTokenAmount() <= BigDecimal.ZERO) {
             return TransferResult.Failure(IllegalArgumentException("Комиссия должна быть больше 0"))
         }
 
@@ -255,18 +243,18 @@ class TXDetailsViewModel @Inject constructor(
         if (!tron.addressUtilities.isAddressActivated(transaction.receiverAddress))
             return TransferResult.Failure(IllegalStateException("Для активации необходимо нажать кнопку «Системный TRX»"))
 
-        if (feeBalance.toDouble() < commission.toTokenAmount().toDouble()) {
+        if (feeBalance < commission.toTokenAmount()) {
             val source = if (transaction.tokenName == "TRX") "соте" else "главном адресе"
             return TransferResult.Failure(IllegalStateException("Недостаточно средств на $source для оплаты комиссии."))
         }
 
-        if (transaction.amount.toTokenAmount().toDouble() < amount.toTokenAmount().toDouble()) {
+        if (transaction.amount.toTokenAmount() < amount.toTokenAmount()) {
             return TransferResult.Failure(IllegalStateException("Указанная сумма больше, чем сумма транзакции"))
         }
 
         val netAmount =
-            (transaction.amount.toTokenAmount().toDouble() - amount.toTokenAmount().toDouble()) - commission.toTokenAmount().toDouble()
-        if (netAmount < 0.0 && transaction.tokenName == "TRX") {
+            (transaction.amount.toTokenAmount() - amount.toTokenAmount()) - commission.toTokenAmount()
+        if (netAmount < BigDecimal.ZERO && transaction.tokenName == "TRX") {
             return TransferResult.Failure(IllegalStateException("Перевод невозможен, так как суммы недостаточно с учетом комиссии"))
         }
 
@@ -427,12 +415,12 @@ class TXDetailsViewModel @Inject constructor(
         if (!tron.addressUtilities.isAddressActivated(transaction.receiverAddress))
             return TransferResult.Failure(IllegalStateException("Для активации необходимо нажать кнопку «Системный TRX»"))
 
-        if (feeBalance.toDouble() < commission.toTokenAmount().toDouble()) {
+        if (feeBalance < commission.toTokenAmount()) {
             val source = if (transaction.tokenName == "TRX") "соте" else "главном адресе"
             return TransferResult.Failure(IllegalStateException("Недостаточно средств на $source для оплаты комиссии."))
         }
 
-        if (commission.toTokenAmount().toDouble() <= 0.0) {
+        if (commission.toTokenAmount() <= BigDecimal.ZERO) {
             return TransferResult.Failure(IllegalArgumentException("Комиссия должна быть больше 0"))
         }
 
