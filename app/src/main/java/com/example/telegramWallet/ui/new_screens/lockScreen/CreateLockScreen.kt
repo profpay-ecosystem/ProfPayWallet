@@ -32,8 +32,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.telegramWallet.R
 import com.example.telegramWallet.bridge.view_model.GetContextViewModel
 import com.example.telegramWallet.data.utils.hashPasswordWithBCrypt
-import com.example.telegramWallet.ui.features.lockScreen.InputDots
-import com.example.telegramWallet.ui.features.lockScreen.NumberBoard
+import com.example.telegramWallet.ui.new_feature.lockScreen.InputDots
+import com.example.telegramWallet.ui.new_feature.lockScreen.NumberBoard
 
 @Composable
 fun CreateLockScreen(

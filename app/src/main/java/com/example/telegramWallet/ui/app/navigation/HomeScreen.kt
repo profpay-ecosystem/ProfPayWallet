@@ -1,4 +1,4 @@
-package com.example.telegramWallet.ui.screens
+package com.example.telegramWallet.ui.app.navigation
 
 import android.annotation.SuppressLint
 import android.os.Build
@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.core.content.edit
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.example.telegramWallet.ui.app.navigation.HomeBottomNavBar
 import com.example.telegramWallet.ui.app.navigation.graphs.HomeNavGraph
 import com.example.telegramWallet.ui.shared.sharedPref
 

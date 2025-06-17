@@ -26,7 +26,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.telegramWallet.bridge.view_model.settings.ThemeState
 import com.example.telegramWallet.bridge.view_model.settings.ThemeViewModel
-import com.example.telegramWallet.ui.app.MyApp
+import com.example.telegramWallet.ui.app.navigation.MyApp
 import com.example.telegramWallet.ui.app.navigation.graphs.Graph
 import com.example.telegramWallet.ui.app.theme.WalletNavigationBottomBarTheme
 import dagger.hilt.android.AndroidEntryPoint

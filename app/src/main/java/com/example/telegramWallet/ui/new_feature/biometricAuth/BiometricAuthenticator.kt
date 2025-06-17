@@ -1,4 +1,4 @@
-package com.example.telegramWallet.utils.faceId
+package com.example.telegramWallet.ui.new_feature.biometricAuth
 
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt

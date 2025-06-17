@@ -1,4 +1,4 @@
-package com.example.telegramWallet.ui.screens
+package com.example.telegramWallet.ui.new_screens
 
 import android.os.Build
 import androidx.annotation.RequiresApi

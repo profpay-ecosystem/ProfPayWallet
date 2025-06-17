@@ -1,4 +1,4 @@
-package com.example.telegramWallet.ui.features.lockScreen
+package com.example.telegramWallet.ui.new_feature.lockScreen
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -14,7 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.telegramWallet.utils.faceId.FaceIDAuthentication
+import com.example.telegramWallet.ui.new_feature.biometricAuth.FaceIDAuthentication
 
 @Preview(showBackground = true)
 @Composable
