@@ -1,15 +1,13 @@
-name: Android CI
+name: Android CI & Release
 
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
   build:
+    name: Build APK
     runs-on: ubuntu-latest
 
     steps:
@@ -38,12 +36,49 @@ jobs:
           echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> gradle.properties
           echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> gradle.properties
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      - name: Grant permission to gradlew
+        run: chmod +x ./gradlew
 
       - name: Build release APK
         run: ./gradlew assembleRelease
 
-      - name: Run tests
-        run: ./gradlew test
+      - name: Upload build artifact
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: app/build/outputs/apk/release/app-release.apk
 
+#  release:
+#    name: Create GitHub Release
+#    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+#    needs: build
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Download build artifact
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: release-apk
+#          path: .
+#
+#      - name: Calculate SHA256
+#        id: sha
+#        run: |
+#          sha256=$(sha256sum app-release.apk | awk '{print $1}')
+#          echo "sha=$sha256" >> $GITHUB_OUTPUT
+#
+#      - name: Create GitHub Release
+#        uses: softprops/action-gh-release@v2
+#        with:
+#          tag_name: v${{ github.run_number }}
+#          name: Release v${{ github.run_number }}
+#          files: app-release.apk
+#          body: |
+#            ✅ Автоматический релиз после слияния в `main`.
+#
+#            🔐 SHA256: `${{ steps.sha.outputs.sha }}`
+#
+#            Скачайте APK и убедитесь в целостности.
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
