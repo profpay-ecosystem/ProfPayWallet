@@ -1,4 +1,4 @@
-package com.example.telegramWallet.ui.app
+package com.example.telegramWallet.ui.app.navigation
 
 import android.os.Build
 import androidx.annotation.RequiresApi

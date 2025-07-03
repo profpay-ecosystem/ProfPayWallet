@@ -1,4 +1,4 @@
-package com.example.telegramWallet.ui.features.lockScreen
+package com.example.telegramWallet.ui.new_feature.lockScreen
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.grid.GridCells

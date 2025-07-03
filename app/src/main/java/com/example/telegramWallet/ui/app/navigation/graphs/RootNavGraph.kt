@@ -12,7 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.telegramWallet.R
 import com.example.telegramWallet.ui.app.navigation.graphs.navGraph.coRAddressNavGraph
-import com.example.telegramWallet.ui.screens.HomeScreen
+import com.example.telegramWallet.ui.app.navigation.HomeScreen
 import com.example.telegramWallet.ui.new_screens.lockScreen.BlockedAppScreen
 import com.example.telegramWallet.ui.new_screens.lockScreen.CreateLockScreen
 import com.example.telegramWallet.ui.new_screens.lockScreen.LockScreen

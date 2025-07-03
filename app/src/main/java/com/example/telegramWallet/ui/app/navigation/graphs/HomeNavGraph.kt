@@ -35,7 +35,3 @@ fun HomeNavGraph(navController: NavHostController) {
     }
 }
 
-sealed class FAQScreen(val route: String) {
-    data object AboutUs : FAQScreen(route = "about_us")
-    data object Security : FAQScreen(route = "security")
-}
