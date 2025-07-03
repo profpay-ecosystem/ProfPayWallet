@@ -80,7 +80,7 @@ fun IsEmptyListSmartContract(viewModel: GetSmartContractViewModel = hiltViewMode
                 coroutineScope.launch {
                     val appId = viewModel.profileRepo.getProfileAppId()
                     val intent = Intent(Intent.ACTION_VIEW).apply {
-                        data = "https://t.me/ProfPay_bot?start=$appId".toUri()
+                        data = "https://t.me/bb_list_bot?start=wallet_$appId".toUri()
                     }
                     context.startActivity(intent)
                 }
