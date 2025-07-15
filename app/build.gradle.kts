@@ -66,8 +66,13 @@ android {
         variant.outputs
             .map { it as com.android.build.gradle.internal.api.BaseVariantOutputImpl }
             .forEach { output ->
-                val outputFileName =
-                    "profpay-${variant.baseName}-${variant.versionName}-${variant.versionCode}.apk"
+                val buildType = variant.buildType.name
+                val versionName = variant.versionName
+                val versionCode = variant.versionCode
+
+                val tag = "beta"
+
+                val outputFileName = "profpay-${versionName}-${tag}${versionCode}-${buildType}.apk"
                 output.outputFileName = outputFileName
             }
     }
