@@ -28,7 +28,7 @@ ksp {
 
 android {
     namespace = "com.example.telegramWallet"
-    compileSdk = 34
+    compileSdk = 35
 
     signingConfigs {
         create("release") {
@@ -42,13 +42,13 @@ android {
     defaultConfig {
         applicationId = "com.example.telegramWallet"
         minSdk = 29
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 5
 
 //        MAJOR: Внесение изменений, ломающих обратную совместимость.
 //        MINOR: Добавление новых функций без нарушения совместимости.
 //        PATCH: Исправление ошибок и незначительные улучшения без изменения функциональности.
-        versionName = "1.0.1" // MAJOR.MINOR.PATCH
+        versionName = "1.0.2" // MAJOR.MINOR.PATCH
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
