@@ -48,7 +48,7 @@ android {
 //        MAJOR: Внесение изменений, ломающих обратную совместимость.
 //        MINOR: Добавление новых функций без нарушения совместимости.
 //        PATCH: Исправление ошибок и незначительные улучшения без изменения функциональности.
-        versionName = "1.0.2" // MAJOR.MINOR.PATCH
+        versionName = "1.0.3" // MAJOR.MINOR.PATCH
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -66,13 +66,12 @@ android {
         variant.outputs
             .map { it as com.android.build.gradle.internal.api.BaseVariantOutputImpl }
             .forEach { output ->
-                val buildType = variant.buildType.name
                 val versionName = variant.versionName
                 val versionCode = variant.versionCode
 
                 val tag = "beta"
 
-                val outputFileName = "profpay-${versionName}-${tag}${versionCode}-${buildType}.apk"
+                val outputFileName = "profpay-${versionName}-${tag}${versionCode}.apk"
                 output.outputFileName = outputFileName
             }
     }
