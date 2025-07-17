@@ -1,6 +1,7 @@
 package com.example.telegramWallet.ui.new_feature.wallet.tx_details
 
 import StackedSnakbarHostState
+import android.content.ClipData
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,7 +35,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -70,6 +73,8 @@ fun bottomSheetRejectReceipt(
         skipPartiallyExpanded = true,
         confirmValueChange = { true }
     )
+
+    val clipboardManager = LocalClipboardManager.current
 
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -210,7 +215,27 @@ fun bottomSheetRejectReceipt(
                             onValueChange = {
                                 addressSending = it
                             },
-                            trailingIcon = {},
+                            trailingIcon = {
+                                Card(
+                                shape = RoundedCornerShape(5.dp),
+                                modifier = Modifier.padding(end = 8.dp),
+                                elevation = CardDefaults.cardElevation(7.dp),
+                                onClick = {
+                                    val clipData = clipboardManager.getText()
+                                    if (clipData != null) {
+                                        addressSending = clipData.toString()
+                                    }
+                                }
+                            ) {
+                                Text(
+                                    "Paste",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.padding(
+                                        horizontal = 12.dp,
+                                        vertical = 8.dp
+                                    ),
+                                )
+                            }},
                             colors = TextFieldDefaults.colors(
                                 focusedTextColor = MaterialTheme.colorScheme.onBackground,
                                 unfocusedTextColor = PubAddressDark,
