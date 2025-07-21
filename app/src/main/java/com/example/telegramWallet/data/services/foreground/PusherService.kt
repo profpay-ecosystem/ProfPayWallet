@@ -17,6 +17,7 @@ import com.example.telegramWallet.data.database.repositories.ProfileRepo
 import com.example.telegramWallet.data.database.repositories.TransactionsRepo
 import com.example.telegramWallet.data.database.repositories.wallet.AddressRepo
 import com.example.telegramWallet.data.database.repositories.wallet.CentralAddressRepo
+import com.example.telegramWallet.data.database.repositories.wallet.PendingTransactionRepo
 import com.example.telegramWallet.data.database.repositories.wallet.TokenRepo
 import com.example.telegramWallet.data.scheduler.transfer.tron.UsdtTransferScheduler
 import com.example.telegramWallet.tron.Tron
@@ -39,6 +40,7 @@ class PusherService : Service(), CoroutineScope {
     @Inject lateinit var tokenRepo: TokenRepo
     @Inject lateinit var centralAddressRepo: CentralAddressRepo
     @Inject lateinit var tron: Tron
+    @Inject lateinit var pendingTransactionRepo: PendingTransactionRepo
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main + job
@@ -127,7 +129,8 @@ class PusherService : Service(), CoroutineScope {
                 tokenRepo = tokenRepo,
                 centralAddressRepo = centralAddressRepo,
                 notificationFunction = ::showNotification,
-                tron = tron
+                tron = tron,
+                pendingTransactionRepo = pendingTransactionRepo
             ).scheduleAddresses()
         }
     }

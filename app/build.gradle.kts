@@ -48,7 +48,7 @@ android {
 //        MAJOR: Внесение изменений, ломающих обратную совместимость.
 //        MINOR: Добавление новых функций без нарушения совместимости.
 //        PATCH: Исправление ошибок и незначительные улучшения без изменения функциональности.
-        versionName = "1.0.3" // MAJOR.MINOR.PATCH
+        versionName = "1.1.6" // MAJOR.MINOR.PATCH
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -210,7 +210,7 @@ dependencies {
     implementation("io.grpc:grpc-stub:$grpcVersion")
     implementation("io.grpc:grpc-okhttp:$grpcVersion")
 
-    implementation("io.github.tronprotocol:trident:0.9.2")
+    implementation("io.github.tronprotocol:trident:0.10.0")
     implementation(files("libs/bitcoinj-core-0.17-SNAPSHOT.jar"))
 
     implementation("androidx.navigation:navigation-compose:$navVersion")

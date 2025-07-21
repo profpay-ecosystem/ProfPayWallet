@@ -115,7 +115,7 @@ fun WalletInfoScreen(
             .distinctUntilChanged()
             .collectLatest { addresses ->
                 withContext(Dispatchers.IO) {
-                    setWalletName(viewModel.getWalletNameById(walletId))
+                    setWalletName(viewModel.getWalletNameById(walletId) ?: "")
                     setListTokensWithTotalBalance(viewModel.getListTokensWithTotalBalance(addresses))
                     viewModel.updateTokenBalances(addresses)
                 }
@@ -270,7 +270,7 @@ fun WalletInfoScreen(
                                                 paintIconId = currentTokenName.paintIconId,
                                                 label = tokenEntity.tokenName,
                                                 shortNameToken = currentTokenName.shortName,
-                                                balance = tokenEntity.getBalanceWithoutFrozen(),
+                                                balance = tokenEntity.balance,
                                                 balanceForLastMonth = 32.0,
                                                 viewModel = viewModel
                                             )

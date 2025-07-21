@@ -33,7 +33,7 @@ class WalletArchivalSotViewModel @Inject constructor(
     ): List<AddressWithTokens> {
         return listAddressWithTokens.filter { addressWT ->
             addressWT.tokens.any { token ->
-                token.tokenName == tokenName && token.getBalanceWithoutFrozen() > BigInteger.ZERO
+                token.token.tokenName == tokenName && token.balanceWithoutFrozen > BigInteger.ZERO
             }
         }
     }

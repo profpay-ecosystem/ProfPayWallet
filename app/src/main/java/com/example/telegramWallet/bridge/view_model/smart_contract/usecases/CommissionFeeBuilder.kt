@@ -64,7 +64,7 @@ class CommissionFeeBuilder @Inject constructor(
         return CommissionFeeBuilderResult.Success(
             executorAddress = address,
             requiredBandwidth = estimateCommissionBandwidth.bandwidth,
-            transaction = signedTxnBytesCommission
+            transaction = signedTxnBytesCommission.signedTxn!!
         )
     }
 }

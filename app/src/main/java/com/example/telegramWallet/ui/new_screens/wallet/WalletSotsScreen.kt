@@ -179,7 +179,7 @@ private fun SheetContent(
                         .collect(Collectors.toList()))
                 { index, address ->
                     val tokenEntity = address.tokens.stream()
-                        .filter { currentToken -> currentToken.tokenName == tokenName }
+                        .filter { currentToken -> currentToken.token.tokenName == tokenName }
                         .findFirst()
                         .orElse(null)
 
@@ -233,9 +233,9 @@ private fun SheetContent(
                                         )
                                         Text(
                                             text = if (tokenName == "USDT") {
-                                                "$${(tokenEntity?.getBalanceWithoutFrozen() ?: BigInteger.ZERO).toTokenAmount()}"
+                                                "$${(tokenEntity?.balanceWithoutFrozen ?: BigInteger.ZERO).toTokenAmount()}"
                                             } else {
-                                                "${(tokenEntity?.getBalanceWithoutFrozen() ?: BigInteger.ZERO).toTokenAmount()} TRX"
+                                                "${(tokenEntity?.balanceWithoutFrozen ?: BigInteger.ZERO).toTokenAmount()} TRX"
                                             },
                                             style = MaterialTheme.typography.labelLarge,
                                         )

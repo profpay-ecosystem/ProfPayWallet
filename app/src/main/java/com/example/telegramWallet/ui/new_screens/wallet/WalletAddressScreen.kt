@@ -101,6 +101,8 @@ fun WalletAddressScreen(
     val address = sharedPref.getString("address_for_wa", "") ?: ""
     val tokenName = sharedPref.getString("token_name", TokenName.USDT.tokenName) ?: TokenName.USDT.tokenName
 
+    val isActivated by viewModel.isActivated.collectAsState()
+
     val addressWithTokens by viewModel.getAddressWithTokensByAddressLD(address).observeAsState()
 
     val tokenNameObj = TokenName.entries.stream()
@@ -108,9 +110,9 @@ fun WalletAddressScreen(
         .findFirst()
         .orElse(TokenName.USDT)
 
-    val tokenEntity: TokenEntity? =
-        addressWithTokens?.tokens?.stream()?.filter { it.tokenName == tokenName }?.findFirst()
-            ?.orElse(TokenEntity(0, 1, "USDT", BigInteger.ZERO))
+    val tokenEntity =
+        addressWithTokens?.tokens?.stream()?.filter { it.token.tokenName == tokenName }?.findFirst()
+            ?.orElse(null)
 
     val transactionsByAddressSender by viewModel.getTransactionsByAddressSenderAndTokenLD(walletId,
         address, tokenName
@@ -131,8 +133,28 @@ fun WalletAddressScreen(
         }
     }
 
+    LaunchedEffect(addressWithTokens) {
+        if (addressWithTokens == null) return@LaunchedEffect
+        viewModel.checkActivation(addressWithTokens!!.addressEntity.address)
+    }
+
     val stackedSnackbarHostState = rememberStackedSnackbarHostState()
     val bottomPadding = sharedPref().getFloat("bottomPadding", 54f)
+
+    val (_, setIsOpenRejectReceiptSheet) = bottomSheetRejectReceipt(
+        viewModel = viewModel,
+        addressWithTokens = addressWithTokens,
+        snackbar = stackedSnackbarHostState,
+        tokenName = tokenName
+    )
+
+    val (_, setIsOpenTransOnGeneralReceiptSheet) = bottomSheetTransOnGeneralReceipt(
+        viewModel = viewModel,
+        addressWithTokens = addressWithTokens,
+        snackbar = stackedSnackbarHostState,
+        tokenName = tokenName,
+        walletId = walletId
+    )
 
     Scaffold(
         modifier = Modifier,
@@ -229,7 +251,7 @@ fun WalletAddressScreen(
                                 )
                                 Text(
                                     text = "${
-                                        tokenEntity?.getBalanceWithoutFrozen()?.toTokenAmount()
+                                        tokenEntity?.balanceWithoutFrozen?.toTokenAmount()
                                     }",
                                     style = MaterialTheme.typography.bodySmall,
                                 )
@@ -304,7 +326,6 @@ fun WalletAddressScreen(
                                     verticalArrangement = Arrangement.Top
                                 ) {
                                     LazyListTransactionsFeature(
-                                        goToSystemTRX = { goToSystemTRX() },
                                         isForWA = Pair(true, stackedSnackbarHostState),
                                         groupedTransaction = groupedAllTransaction,
                                         goToTXDetailsScreen = { goToTXDetailsScreen() })
@@ -339,7 +360,6 @@ fun WalletAddressScreen(
                                     verticalArrangement = Arrangement.Top
                                 ) {
                                     LazyListTransactionsFeature(
-                                        goToSystemTRX = { goToSystemTRX() },
                                         isForWA = Pair(true, stackedSnackbarHostState),
                                         groupedTransaction = groupedTransaction,
                                         goToTXDetailsScreen = { goToTXDetailsScreen() })
@@ -372,7 +392,6 @@ fun WalletAddressScreen(
                                     verticalArrangement = Arrangement.Top
                                 ) {
                                     LazyListTransactionsFeature(
-                                        goToSystemTRX = { goToSystemTRX() },
                                         isForWA = Pair(true, stackedSnackbarHostState),
                                         groupedTransaction = groupedTransaction,
                                         goToTXDetailsScreen = { goToTXDetailsScreen() })
@@ -400,7 +419,7 @@ fun WalletAddressScreen(
                 .background(Color.Transparent)/*delete this?*/,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (tokenEntity?.getBalanceWithoutFrozen()
+            if (tokenEntity?.balanceWithoutFrozen
                     ?.let { it > BigInteger.ZERO } == true && addressWithTokens?.addressEntity?.isGeneralAddress!!
             ) {
                 Card(
@@ -432,8 +451,82 @@ fun WalletAddressScreen(
                     }
 
                 }
+            } else if (tokenEntity?.balanceWithoutFrozen
+                    ?.let { it > BigInteger.ZERO } == true && !addressWithTokens?.addressEntity?.isGeneralAddress!!) {
+                Card(
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp)
+                        .fillMaxWidth()
+                        .height(IntrinsicSize.Min)
+                        .weight(0.5f)
+                        .shadow(7.dp, RoundedCornerShape(10.dp))
+                        .clickable {
+                            if (!isActivated) {
+                                stackedSnackbarHostState.showErrorSnackbar(
+                                    title = "Перевод валюты невозможен",
+                                    description = "Для перевода необходимо активировать адрес, отправив 1 TRX.",
+                                    actionTitle = "Перейти",
+                                    action = { goToSystemTRX() }
+                                )
+                            } else {
+                                setIsOpenRejectReceiptSheet(true)
+                            }
+                        },
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(vertical = 4.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(id = R.drawable.icon_send),
+                            contentDescription = "",
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                        Text(text = "Отправить")
+                    }
+                }
+                Card(
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp)
+                        .fillMaxWidth()
+                        .weight(0.5f)
+                        .height(IntrinsicSize.Min)
+                        .shadow(7.dp, RoundedCornerShape(10.dp))
+                        .clickable {
+                            viewModel.viewModelScope.launch {
+                                if (!isActivated) {
+                                    stackedSnackbarHostState.showErrorSnackbar(
+                                        title = "Перевод валюты невозможен",
+                                        description = "Для активации необходимо перейти в «Системный TRX»",
+                                        actionTitle = "Перейти",
+                                        action = { goToSystemTRX() }
+                                    )
+                                } else {
+                                    setIsOpenTransOnGeneralReceiptSheet(true)
+                                }
+                            }
+                        },
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(vertical = 4.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(id = R.drawable.icon_get),
+                            contentDescription = "",
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                        Text(text = "Получить")
+                    }
+                }
             }
-            if (addressWithTokens?.addressEntity?.sotIndex?.let { it >= 0 } == true) {
+            if (addressWithTokens?.addressEntity?.sotIndex?.let { it >= 0 } == true && addressWithTokens?.addressEntity?.isGeneralAddress!!) {
                 var openDialog by remember { mutableStateOf(false) }
                 Card(
                     modifier = Modifier
@@ -504,7 +597,6 @@ fun WalletAddressScreen(
 
 @Composable
 fun LazyListTransactionsFeature(
-    goToSystemTRX: () -> Unit = {},
     isForWA: Pair<Boolean, StackedSnakbarHostState?> = Pair(false, null),
     groupedTransaction: List<List<TransactionModel?>>,
     goToTXDetailsScreen: () -> Unit
@@ -556,7 +648,6 @@ fun LazyListTransactionsFeature(
                                     }
 
                                 CardHistoryTransactionsForWAFeature(
-                                    goToSystemTRX = { goToSystemTRX() },
                                     onClick = {
                                         sharedPref.edit() {
                                             putLong(
@@ -572,7 +663,6 @@ fun LazyListTransactionsFeature(
                                     typeTransaction = item.type,
                                     address = currentAddress,
                                     transactionEntity = item.toEntity(),
-                                    stackedSnackbarHostState = isForWA.second!!,
                                 )
                             } else {
                                 val currentAddress =
@@ -625,40 +715,15 @@ fun LazyListTransactionsFeature(
 
 @Composable
 fun CardHistoryTransactionsForWAFeature(
-    stackedSnackbarHostState: StackedSnakbarHostState,
     transactionEntity: TransactionEntity,
-    viewModel: TXDetailsViewModel = hiltViewModel(),
     address: String,
     typeTransaction: Int,
     paintIconId: Int,
     amount: String,
     shortNameToken: String,
-    goToSystemTRX: () -> Unit = {},
     onClick: () -> Unit = {},
 ) {
-    val (_, setIsOpenRejectReceiptSheet) = bottomSheetRejectReceipt(
-        viewModel = viewModel,
-        transactionEntity = transactionEntity,
-        snackbar = stackedSnackbarHostState
-    )
-    val (_, setIsOpenTransOnGeneralReceiptSheet) = bottomSheetTransOnGeneralReceipt(
-        viewModel = viewModel,
-        transactionEntity = transactionEntity,
-        snackbar = stackedSnackbarHostState
-    )
-
-    val isGeneralAddressReceive by produceState<Boolean>(initialValue = false) {
-        value = viewModel.isGeneralAddress(transactionEntity.receiverAddress)
-    }
-
-    val isActivated by viewModel.isActivated.collectAsState()
-
-    LaunchedEffect(Unit) {
-        viewModel.checkActivation(transactionEntity.receiverAddress)
-    }
-
     val sharedPref = sharedPref()
-    val addressWa = sharedPref.getString("address_for_wa", "")
 
     val label = when (typeTransaction) {
         TransactionType.SEND.index -> "Отправлено"
@@ -678,9 +743,6 @@ fun CardHistoryTransactionsForWAFeature(
 
         else -> return
     }
-
-    val betweenYourselfReceiver =
-        typeTransaction == TransactionType.BETWEEN_YOURSELF.index && transactionEntity.receiverAddress == addressWa
 
     Card(
         modifier = Modifier
@@ -741,86 +803,9 @@ fun CardHistoryTransactionsForWAFeature(
                         modifier = Modifier
                             .size(20.dp)
                             .weight(0.2f),
-//                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-//                        почему так
                         imageVector = ImageVector.vectorResource(id = R.drawable.icon_more_vert),
                         contentDescription = "Back",
                     )
-                }
-            }
-            if ((!isGeneralAddressReceive && typeTransaction == TransactionType.RECEIVE.index && !transactionEntity.isProcessed) ||
-                (!isGeneralAddressReceive && betweenYourselfReceiver && !transactionEntity.isProcessed)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                        .fillMaxWidth(),
-                ) {
-                    Card(
-                        modifier = Modifier
-                            .padding(start = 8.dp)
-                            .fillMaxWidth()
-                            .weight(0.5f)
-                            .shadow(7.dp, RoundedCornerShape(7.dp))
-                            .clickable {
-                                if (!isActivated) {
-                                    stackedSnackbarHostState.showErrorSnackbar(
-                                        title = "Перевод валюты невозможен",
-                                        description = "Для перевода необходимо активировать адрес, отправив 1 TRX.",
-                                        actionTitle = "Перейти",
-                                        action = { goToSystemTRX() }
-                                    )
-                                } else {
-                                    setIsOpenRejectReceiptSheet(true)
-                                }
-                            },
-                    ) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                text = "Вернуть",
-                                modifier = Modifier.padding(vertical = 6.dp, horizontal = 8.dp),
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                    }
-                    Card(
-                        modifier = Modifier
-                            .padding(horizontal = 8.dp)
-                            .fillMaxWidth()
-                            .weight(0.5f)
-                            .shadow(7.dp, RoundedCornerShape(7.dp))
-                            .clickable {
-                                viewModel.viewModelScope.launch {
-                                    if (!viewModel.tron.addressUtilities.isAddressActivated(
-                                            transactionEntity.receiverAddress
-                                        )
-                                    ) {
-                                        stackedSnackbarHostState.showErrorSnackbar(
-                                            title = "Перевод валюты невозможен",
-                                            description = "Для активации необходимо перейти в «Системный TRX»",
-                                            actionTitle = "Перейти",
-                                            action = { goToSystemTRX() }
-                                        )
-                                    } else {
-                                        setIsOpenTransOnGeneralReceiptSheet(true)
-                                    }
-                                }
-                            },
-                    ) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                text = "Принять",
-                                modifier = Modifier.padding(vertical = 6.dp, horizontal = 8.dp),
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                    }
                 }
             }
         }

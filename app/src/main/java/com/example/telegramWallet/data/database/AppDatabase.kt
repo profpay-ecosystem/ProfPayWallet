@@ -14,6 +14,7 @@ import com.example.telegramWallet.data.database.dao.TransactionsDao
 import com.example.telegramWallet.data.database.dao.wallet.AddressDao
 import com.example.telegramWallet.data.database.dao.wallet.CentralAddressDao
 import com.example.telegramWallet.data.database.dao.wallet.ExchangeRatesDao
+import com.example.telegramWallet.data.database.dao.wallet.PendingTransactionDao
 import com.example.telegramWallet.data.database.dao.wallet.SmartContractDao
 import com.example.telegramWallet.data.database.dao.wallet.TokenDao
 import com.example.telegramWallet.data.database.dao.wallet.TradingInsightsDao
@@ -24,6 +25,7 @@ import com.example.telegramWallet.data.database.entities.StatesEntity
 import com.example.telegramWallet.data.database.entities.wallet.AddressEntity
 import com.example.telegramWallet.data.database.entities.wallet.CentralAddressEntity
 import com.example.telegramWallet.data.database.entities.wallet.ExchangeRatesEntity
+import com.example.telegramWallet.data.database.entities.wallet.PendingTransactionEntity
 import com.example.telegramWallet.data.database.entities.wallet.SmartContractEntity
 import com.example.telegramWallet.data.database.entities.wallet.TokenEntity
 import com.example.telegramWallet.data.database.entities.wallet.TradingInsightsEntity
@@ -32,7 +34,7 @@ import com.example.telegramWallet.data.database.entities.wallet.WalletProfileEnt
 
 // Создание Базы Данных
 @Database(
-    version = 28,
+    version = 31,
     autoMigrations = [
         AutoMigration(from = 25, to = 26, spec = AppDatabase.AutoMigrationFrom25To26::class)
     ],
@@ -48,7 +50,8 @@ import com.example.telegramWallet.data.database.entities.wallet.WalletProfileEnt
         CentralAddressEntity::class,
         SmartContractEntity::class,
         ExchangeRatesEntity::class,
-        TradingInsightsEntity::class
+        TradingInsightsEntity::class,
+        PendingTransactionEntity::class
     ],
     exportSchema = true
 )
@@ -65,6 +68,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun getSmartContractDao(): SmartContractDao
     abstract fun getExchangeRatesDao(): ExchangeRatesDao
     abstract fun getTradingInsightsDao(): TradingInsightsDao
+    abstract fun getPendingTransactionDao(): PendingTransactionDao
 
     @DeleteColumn.Entries(
         DeleteColumn(tableName = "central_address", columnName = "trx_balance"),

@@ -13,14 +13,9 @@ import javax.inject.Singleton
 @Singleton
 interface TokenRepo {
     suspend fun insertNewTokenEntity(tokenEntity: TokenEntity): Long
-    suspend fun increaseTronBalanceViaId(amount: BigInteger, addressId: Long, tokenName: String)
-    suspend fun decreaseTronBalanceViaId(amount: BigInteger, addressId: Long, tokenName: String)
     suspend fun updateTronBalanceViaId(amount: BigInteger, addressId: Long, tokenName: String)
-    suspend fun increaseTronFrozenBalanceViaId(frozenBalance: BigInteger, addressId: Long, tokenName: String)
-    suspend fun decreaseTronFrozenBalanceViaId(frozenBalance: BigInteger, addressId: Long, tokenName: String)
-    suspend fun getTronFrozenBalanceViaId(addressId: Long, tokenName: String): BigInteger
-    suspend fun updateTronFrozenBalanceViaId(addressId: Long, tokenName: String)
     suspend fun updateTokenBalanceFromBlockchain(address: String, token: TokenName)
+    suspend fun getTokenIdByAddressIdAndTokenName(addressId: Long, tokenName: String): Long
 }
 
 @Singleton
@@ -32,43 +27,8 @@ class TokenRepoImpl @Inject constructor(private val tokenDao: TokenDao,
         return tokenDao.insertNewTokenEntity(tokenEntity)
     }
 
-    override suspend fun increaseTronBalanceViaId(amount: BigInteger, addressId: Long, tokenName: String) {
-        return tokenDao.increaseTronBalanceViaId(amount, addressId, tokenName)
-    }
-
-    override suspend fun decreaseTronBalanceViaId(amount: BigInteger, addressId: Long, tokenName: String) {
-        return tokenDao.decreaseTronBalanceViaId(amount, addressId, tokenName)
-    }
-
     override suspend fun updateTronBalanceViaId(amount: BigInteger, addressId: Long, tokenName: String) {
         return tokenDao.updateTronBalanceViaId(amount, addressId, tokenName)
-    }
-
-    override suspend fun increaseTronFrozenBalanceViaId(
-        frozenBalance: BigInteger,
-        addressId: Long,
-        tokenName: String
-    ) {
-        return tokenDao.increaseTronFrozenBalanceViaId(frozenBalance, addressId, tokenName)
-    }
-
-    override suspend fun decreaseTronFrozenBalanceViaId(
-        frozenBalance: BigInteger,
-        addressId: Long,
-        tokenName: String
-    ) {
-        val oldBalance = getTronFrozenBalanceViaId(addressId, tokenName)
-        if (oldBalance - frozenBalance < BigInteger.ZERO) return
-
-        return tokenDao.decreaseTronFrozenBalanceViaId(frozenBalance, addressId, tokenName)
-    }
-
-    override suspend fun getTronFrozenBalanceViaId(addressId: Long, tokenName: String): BigInteger {
-        return tokenDao.getTronFrozenBalanceViaId(addressId, tokenName)
-    }
-
-    override suspend fun updateTronFrozenBalanceViaId(addressId: Long, tokenName: String) {
-        return tokenDao.updateTronFrozenBalanceViaId(addressId, tokenName)
     }
 
     override suspend fun updateTokenBalanceFromBlockchain(
@@ -82,6 +42,15 @@ class TokenRepoImpl @Inject constructor(private val tokenDao: TokenDao,
             } else tron.addressUtilities.getTrxBalance(address)
             // TODO: Обновления можно отменять если цифры блокчейна и БД сходятся
             updateTronBalanceViaId(balance, addressId, token.shortName)
+        }
+    }
+
+    override suspend fun getTokenIdByAddressIdAndTokenName(
+        addressId: Long,
+        tokenName: String
+    ): Long {
+        return withContext(Dispatchers.IO) {
+            return@withContext tokenDao.getTokenIdByAddressIdAndTokenName(addressId, tokenName)
         }
     }
 }

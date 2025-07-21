@@ -37,7 +37,7 @@ class WalletInfoViewModel @Inject constructor(
     val exchangeRatesRepo: ExchangeRatesRepo,
     val tradingInsightsRepo: TradingInsightsRepo
 ) : ViewModel() {
-    suspend fun getWalletNameById(walletId: Long): String {
+    suspend fun getWalletNameById(walletId: Long): String? {
         return walletProfileRepo.getWalletNameById(walletId)
     }
 
@@ -82,13 +82,13 @@ class WalletInfoViewModel @Inject constructor(
             if (listAddressWithTokens.isEmpty()) return@withContext
             TokenName.entries.forEach { token ->
                 val gAddressId = listAddressWithTokens.stream().filter { addressWithTokens ->
-                    addressWithTokens.tokens.any { it.tokenName == token.tokenName }
+                    addressWithTokens.tokens.any { it.token.tokenName == token.tokenName }
                 }.filter { it.addressEntity.isGeneralAddress }.findFirst()
                     .orElse(listAddressWithTokens[1])
                 val sumBalancesSotByToken = listAddressWithTokens
                     .flatMap { addressWithTokens -> addressWithTokens.tokens }
-                    .filter { it.tokenName == token.tokenName }
-                    .sumOf { it.getBalanceWithoutFrozen() }
+                    .filter { it.token.tokenName == token.tokenName }
+                    .sumOf { it.balanceWithoutFrozen }
 
                 listTokensWithTotalBalance.add(
                     TokenEntity(

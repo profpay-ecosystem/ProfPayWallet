@@ -14,6 +14,8 @@ import com.example.telegramWallet.data.database.repositories.wallet.CentralAddre
 import com.example.telegramWallet.data.database.repositories.wallet.CentralAddressRepoImpl
 import com.example.telegramWallet.data.database.repositories.wallet.ExchangeRatesRepo
 import com.example.telegramWallet.data.database.repositories.wallet.ExchangeRatesRepoImpl
+import com.example.telegramWallet.data.database.repositories.wallet.PendingTransactionRepo
+import com.example.telegramWallet.data.database.repositories.wallet.PendingTransactionRepoImpl
 import com.example.telegramWallet.data.database.repositories.wallet.SmartContractRepo
 import com.example.telegramWallet.data.database.repositories.wallet.SmartContractRepoImpl
 import com.example.telegramWallet.data.database.repositories.wallet.TokenRepo
@@ -55,4 +57,6 @@ abstract class ProfileModule {
     abstract fun bindExchangeRatesRepo(exchangeRatesRepoImpl: ExchangeRatesRepoImpl): ExchangeRatesRepo
     @Binds
     abstract fun bindTradingInsightsRepo(tradingInsightsRepoIml: TradingInsightsRepoImpl): TradingInsightsRepo
+    @Binds
+    abstract fun bindPendingTransactionRepo(pendingTransactionRepoImpl: PendingTransactionRepoImpl): PendingTransactionRepo
 }

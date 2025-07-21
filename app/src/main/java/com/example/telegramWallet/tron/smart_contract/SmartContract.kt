@@ -57,13 +57,13 @@ class SmartContract(val context: Context) {
         val bandwidth = AppConstants.SmartContract.PUBLISH_BANDWIDTH_REQUIRED.toInt()
 
         // Энергия
-        val entriesEnergy = wrapper.energyPrices.prices.split(",")
+        val entriesEnergy = wrapper.getEnergyPrices().prices.split(",")
         val lastEnergyEntry = entriesEnergy.last()
         val lastEnergyValue = lastEnergyEntry.split(":").last()
         val lastEnergyPrice = lastEnergyValue.toInt()
 
         // Сеть
-        val entriesBandwith = wrapper.bandwidthPrices.prices.split(",")
+        val entriesBandwith = wrapper.getBandwidthPrices().prices.split(",")
         val lastBandwithEntry = entriesBandwith.last()
         val lastBandwithValue = lastBandwithEntry.split(":").last()
         val lastBandwithPrice = lastBandwithValue.toInt()

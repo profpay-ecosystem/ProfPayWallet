@@ -12,6 +12,7 @@ import com.example.telegramWallet.data.database.dao.TransactionsDao
 import com.example.telegramWallet.data.database.dao.wallet.AddressDao
 import com.example.telegramWallet.data.database.dao.wallet.CentralAddressDao
 import com.example.telegramWallet.data.database.dao.wallet.ExchangeRatesDao
+import com.example.telegramWallet.data.database.dao.wallet.PendingTransactionDao
 import com.example.telegramWallet.data.database.dao.wallet.SmartContractDao
 import com.example.telegramWallet.data.database.dao.wallet.TokenDao
 import com.example.telegramWallet.data.database.dao.wallet.TradingInsightsDao
@@ -78,6 +79,11 @@ class AppDatabaseModule {
     @Provides
     fun provideTradingInsightsDao(appDatabase: AppDatabase): TradingInsightsDao {
         return appDatabase.getTradingInsightsDao()
+    }
+
+    @Provides
+    fun providePendingTransactionDao(appDatabase: AppDatabase): PendingTransactionDao {
+        return appDatabase.getPendingTransactionDao()
     }
 
     @Provides
@@ -414,6 +420,60 @@ class AppDatabaseModule {
             }
         }
 
+        val MIGRATION_28_29 = object : Migration(28, 29) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS pending_transaction (
+                        id INTEGER PRIMARY KEY NOT NULL,
+                        tx_id TEXT NOT NULL,
+                        amount TEXT NOT NULL,
+                        timestamp INTEGER NOT NULL,
+                        ttl_mills INTEGER NOT NULL
+                    )
+                """.trimIndent())
+            }
+        }
+
+        val MIGRATION_29_30 = object : Migration(29, 30) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE pending_transaction_new (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        token_id INTEGER NOT NULL,
+                        tx_id TEXT NOT NULL,
+                        amount TEXT NOT NULL,
+                        timestamp INTEGER NOT NULL,
+                        ttl_mills INTEGER NOT NULL,
+                        FOREIGN KEY(token_id) REFERENCES tokens(token_id) ON DELETE CASCADE
+                    )
+                """.trimIndent())
+
+                db.execSQL("DROP TABLE pending_transaction")
+                db.execSQL("ALTER TABLE pending_transaction_new RENAME TO pending_transaction")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_pending_transaction_token_id ON pending_transaction(token_id)")
+            }
+        }
+
+        val MIGRATION_30_31 = object : Migration(30, 31) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE pending_transaction_new (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        token_id INTEGER NOT NULL,
+                        tx_id TEXT NOT NULL,
+                        amount TEXT NOT NULL,
+                        timestamp INTEGER NOT NULL,
+                        ttl_mills INTEGER NOT NULL,
+                        FOREIGN KEY(token_id) REFERENCES tokens(token_id) ON DELETE CASCADE
+                    )
+                """.trimIndent())
+
+                db.execSQL("DROP TABLE pending_transaction")
+                db.execSQL("ALTER TABLE pending_transaction_new RENAME TO pending_transaction")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_pending_transaction_token_id ON pending_transaction(token_id)")
+            }
+        }
+
         return Room.databaseBuilder(
             appContext, AppDatabase::class.java,
             "room_crypto_wallet.db"
@@ -444,6 +504,9 @@ class AppDatabaseModule {
             .addMigrations(MIGRATION_24_25)
             .addMigrations(MIGRATION_26_27)
             .addMigrations(MIGRATION_27_28)
+            .addMigrations(MIGRATION_28_29)
+            .addMigrations(MIGRATION_29_30)
+            .addMigrations(MIGRATION_30_31)
             .build()
     }
 }

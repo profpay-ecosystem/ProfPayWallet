@@ -2,6 +2,7 @@ package com.example.telegramWallet.data.scheduler.transfer.tron
 
 import android.database.sqlite.SQLiteConstraintException
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import com.example.telegramWallet.data.database.entities.wallet.TransactionEntity
 import com.example.telegramWallet.data.database.entities.wallet.TransactionType
@@ -10,6 +11,7 @@ import com.example.telegramWallet.data.database.repositories.ProfileRepo
 import com.example.telegramWallet.data.database.repositories.TransactionsRepo
 import com.example.telegramWallet.data.database.repositories.wallet.AddressRepo
 import com.example.telegramWallet.data.database.repositories.wallet.CentralAddressRepo
+import com.example.telegramWallet.data.database.repositories.wallet.PendingTransactionRepo
 import com.example.telegramWallet.data.database.repositories.wallet.TokenRepo
 import com.example.telegramWallet.data.utils.toTokenAmount
 import com.example.telegramWallet.tron.Tron
@@ -36,7 +38,8 @@ class UsdtTransferScheduler(
     private var tokenRepo: TokenRepo,
     private var centralAddressRepo: CentralAddressRepo,
     private var notificationFunction: (String, String) -> Unit,
-    private var tron: Tron
+    private var tron: Tron,
+    private var pendingTransactionRepo: PendingTransactionRepo
 ) {
     suspend fun scheduleAddresses() = withContext(Dispatchers.IO) {
         val addressList = addressRepo.getAddressesSotsWithTokensByBlockchain("Tron")
@@ -159,6 +162,11 @@ class UsdtTransferScheduler(
             tokenRepo.updateTronBalanceViaId(balance, receiverAddressEntity.addressId!!, tokenName)
         }
 
+        val transactionExists = pendingTransactionRepo.pendingTransactionIsExistsByTxId(transaction.transaction_id)
+        if (transactionExists) {
+            pendingTransactionRepo.deletePendingTransactionByTxId(transaction.transaction_id)
+        }
+
         if (isSender) {
             notificationFunction("\uD83D\uDCB8 Отправлено: ${amount.toTokenAmount()} USDT", "На ${transaction.to.take(6)}...${transaction.to.takeLast(4)}")
         } else {
@@ -189,13 +197,15 @@ class UsdtTransferScheduler(
             receiverAddressEntity?.address -> Pair(receiverAddressEntity, false)
             else -> return@coroutineScope
         }
-
-        val typeValue: Int
-        if (contract.type == "TransferContract") {
-            typeValue = assignTransactionType(idSend = senderAddressEntity?.addressId, idReceive = receiverAddressEntity?.addressId)
-        } else if (contract.type == "TriggerSmartContract") {
-            typeValue = TransactionType.TRIGGER_SMART_CONTRACT.index
-        } else return@coroutineScope
+        val typeValue: Int = when (contract.type) {
+            "TransferContract" -> {
+                assignTransactionType(idSend = senderAddressEntity?.addressId, idReceive = receiverAddressEntity?.addressId)
+            }
+            "TriggerSmartContract" -> {
+                TransactionType.TRIGGER_SMART_CONTRACT.index
+            }
+            else -> return@coroutineScope
+        }
 
         try {
             transactionsRepo.insertNewTransaction(
@@ -225,6 +235,11 @@ class UsdtTransferScheduler(
         if (receiverAddressEntity != null) {
             val balance = tron.addressUtilities.getTrxBalance(receiverAddressEntity.address)
             tokenRepo.updateTronBalanceViaId(balance, receiverAddressEntity.addressId!!, tokenName)
+        }
+
+        val transactionExists = pendingTransactionRepo.pendingTransactionIsExistsByTxId(transaction.txID)
+        if (transactionExists) {
+            pendingTransactionRepo.deletePendingTransactionByTxId(transaction.txID)
         }
 
         if (typeValue != TransactionType.TRIGGER_SMART_CONTRACT.index) {

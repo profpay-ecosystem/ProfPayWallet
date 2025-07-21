@@ -37,7 +37,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.example.telegramWallet.bridge.view_model.dto.transfer.TransferResult
 import com.example.telegramWallet.bridge.view_model.wallet.TXDetailsViewModel
+import com.example.telegramWallet.bridge.view_model.wallet.walletSot.WalletAddressViewModel
 import com.example.telegramWallet.data.database.entities.wallet.TransactionEntity
+import com.example.telegramWallet.data.database.models.AddressWithTokens
 import com.example.telegramWallet.data.flow_db.repo.EstimateCommissionResult
 import com.example.telegramWallet.data.flow_db.repo.TransactionStatusResult
 import com.example.telegramWallet.data.utils.toSunAmount
@@ -55,9 +57,11 @@ import java.math.BigInteger
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun bottomSheetTransOnGeneralReceipt(
-    viewModel: TXDetailsViewModel,
+    viewModel: WalletAddressViewModel,
+    addressWithTokens: AddressWithTokens?,
     snackbar: StackedSnakbarHostState,
-    transactionEntity: TransactionEntity
+    tokenName: String,
+    walletId: Long
 ): Pair<Boolean, (Boolean) -> Unit> {
     val coroutineScope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(
@@ -68,42 +72,22 @@ fun bottomSheetTransOnGeneralReceipt(
     val (isOpenSheet, setIsOpenSheet) = remember { mutableStateOf(false) }
     var isButtonEnabled by remember { mutableStateOf(false) }
     val commissionState by viewModel.stateCommission.collectAsStateWithLifecycle()
-    val transactionStatus by viewModel.transactionStatus.collectAsStateWithLifecycle()
 
     val (commissionOnTransaction, setCommissionOnTransaction) = remember { mutableStateOf(BigDecimal.ZERO) }
     val (generalAddressActivatedCommission, setGeneralAddressActivatedCommission) = remember { mutableStateOf(BigInteger.ZERO) }
     val (isGeneralAddressNotActivatedVisible, setIsGeneralAddressNotActivatedVisible) = remember { mutableStateOf(false) }
 
     if (isOpenSheet) {
-        LaunchedEffect(transactionStatus) {
-            when (transactionStatus) {
-                is TransactionStatusResult.Loading -> {}
-                is TransactionStatusResult.Success -> {
-                    val isProcessed = (transactionStatus as TransactionStatusResult.Success).response.isProcessed
-                    val isError = (transactionStatus as TransactionStatusResult.Success).response.isError
-                    if (isProcessed) {
-                        withContext(Dispatchers.IO) {
-                            viewModel.transactionsRepo.transactionSetProcessedUpdateTrueByTxId(transactionEntity.txId)
-                        }
-
-                        setIsOpenSheet(false)
-                    }
-                }
-                is TransactionStatusResult.Error -> {}
-                is TransactionStatusResult.Empty -> {}
-            }
-        }
-
-        LaunchedEffect(transactionEntity.txId) {
-            viewModel.getTransactionStatus(transactionEntity.txId)
-        }
+        val tokenEntity =
+            addressWithTokens!!.tokens.stream().filter { it.token.tokenName == tokenName }?.findFirst()
+                ?.orElse(null)
 
         LaunchedEffect(Unit) {
             val address = withContext(Dispatchers.IO) {
-                viewModel.addressRepo.getAddressEntityByAddress(transactionEntity.receiverAddress)
+                viewModel.addressRepo.getAddressEntityByAddress(addressWithTokens.addressEntity.address)
             }
             val generalAddress = withContext(Dispatchers.IO) {
-                viewModel.addressRepo.getGeneralAddressByWalletId(transactionEntity.walletId)
+                viewModel.addressRepo.getGeneralAddressByWalletId(walletId)
             }
 
             if (address == null) return@LaunchedEffect
@@ -113,7 +97,7 @@ fun bottomSheetTransOnGeneralReceipt(
                     fromAddress = address.address,
                     toAddress = generalAddress,
                     privateKey = address.privateKey,
-                    amount = transactionEntity.amount
+                    amount = tokenEntity?.balanceWithoutFrozen!!
                 )
             }
             val requiredBandwidth = withContext(Dispatchers.IO) {
@@ -121,7 +105,7 @@ fun bottomSheetTransOnGeneralReceipt(
                     fromAddress = address.address,
                     toAddress = generalAddress,
                     privateKey = address.privateKey,
-                    amount = transactionEntity.amount
+                    amount = tokenEntity?.balanceWithoutFrozen!!
                 )
             }
 
@@ -133,7 +117,7 @@ fun bottomSheetTransOnGeneralReceipt(
                 }
 
                 viewModel.estimateCommission(
-                    address = transactionEntity.receiverAddress,
+                    address = addressWithTokens.addressEntity.address,
                     bandwidth = requiredBandwidth.bandwidth,
                     energy = requiredEnergy.energy
                 )
@@ -161,11 +145,7 @@ fun bottomSheetTransOnGeneralReceipt(
             dragHandle = { Box(modifier = Modifier) },
             modifier = Modifier.height(IntrinsicSize.Min),
             onDismissRequest = {
-                coroutineScope.launch {
-                    sheetState.hide()
-                    delay(400)
-                    setIsOpenSheet(false)
-                }
+                setIsOpenSheet(false)
             },
             sheetState = sheetState,
         ) {
@@ -265,8 +245,11 @@ fun bottomSheetTransOnGeneralReceipt(
                         viewModel.viewModelScope.launch {
                             val result = withContext(Dispatchers.IO) {
                                 viewModel.acceptTransaction(
-                                    transaction = transactionEntity,
-                                    commission = commissionOnTransaction.toSunAmount()
+                                    addressWithTokens = addressWithTokens,
+                                    commission = commissionOnTransaction.toSunAmount(),
+                                    walletId = walletId,
+                                    tokenName = tokenName,
+                                    tokenEntity = tokenEntity
                                 )
                             }
 
@@ -283,11 +266,7 @@ fun bottomSheetTransOnGeneralReceipt(
                                 )
                             }
 
-                            coroutineScope.launch {
-                                sheetState.hide()
-                                delay(400)
-                                setIsOpenSheet(false)
-                            }
+                            setIsOpenSheet(false)
                             isButtonEnabled = true
                         }
 

@@ -28,6 +28,7 @@ import com.example.telegramWallet.data.flow_db.repo.SmartContractRepo
 import com.example.telegramWallet.data.utils.toByteString
 import com.example.telegramWallet.data.utils.toSunAmount
 import com.example.telegramWallet.data.utils.toTokenAmount
+import com.example.telegramWallet.tron.SignedTransactionData
 import com.example.telegramWallet.tron.Tron
 import com.google.protobuf.ByteString
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -275,7 +276,7 @@ class GetSmartContractViewModel @Inject constructor(
             }
         )
 
-        val signedCommissionTransaction: ByteString? = tron.transactions.getSignedTrxTransaction(
+        val signedCommissionTransaction: SignedTransactionData = tron.transactions.getSignedTrxTransaction(
             fromAddress = centralAddressEntity.address,
             toAddress = trxFeeAddress,
             privateKey = centralAddressEntity.privateKey,
@@ -309,7 +310,7 @@ class GetSmartContractViewModel @Inject constructor(
                         .setAddress(centralAddressEntity.address)
                         .setAmount(commission.toSunAmount().toByteString())
                         .setBandwidthRequired(estimateBandwidthCommission.bandwidth)
-                        .setTxnBytes(signedCommissionTransaction)
+                        .setTxnBytes(signedCommissionTransaction.signedTxn)
                         .build()
                 )
                 .build()

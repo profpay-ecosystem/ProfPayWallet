@@ -298,7 +298,7 @@ fun CardArchivalAddress(goToWalletAddress: () -> Unit, addressWithTokens: Addres
 
     val tokenName = sharedPref.getString("token_name", TokenName.USDT.tokenName)
     val tokenEntity = addressWithTokens.tokens.stream()
-        .filter { currentToken -> currentToken.tokenName == tokenName }
+        .filter { currentToken -> currentToken.token.tokenName == tokenName }
         .findFirst()
         .orElse(null)
 
@@ -330,7 +330,7 @@ fun CardArchivalAddress(goToWalletAddress: () -> Unit, addressWithTokens: Addres
                                 "${addressWithTokens.addressEntity.address.takeLast(7)} ",
                         style = MaterialTheme.typography.bodyLarge
                     )
-                    val balanceWF = tokenEntity?.getBalanceWithoutFrozen() ?: BigInteger.ZERO
+                    val balanceWF = tokenEntity?.balanceWithoutFrozen ?: BigInteger.ZERO
                     if (balanceWF > BigInteger.ZERO) {
                         Text(
                             text = "$${balanceWF.toTokenAmount()}",

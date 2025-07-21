@@ -15,7 +15,7 @@ import javax.inject.Singleton
 @Singleton
 interface WalletProfileRepo {
     suspend fun insertNewWalletProfileEntity(name: String, addressesWithKeysForM: AddressesWithKeysForM): Long
-    suspend fun getWalletNameById(walletId: Long): String
+    suspend fun getWalletNameById(walletId: Long): String?
     suspend fun getListAllWallets(): LiveData<List<WalletProfileModel>>
     suspend fun getCountRecords(): Long
     suspend fun getWalletPrivateKeyAndChainCodeById(id: Long): WalletPrivateKeyAndChainCodeModel
@@ -39,7 +39,7 @@ class WalletProfileRepoImpl @Inject constructor(private val walletProfileDao: Wa
         ))
     }
 
-    override suspend fun getWalletNameById(walletId: Long): String {
+    override suspend fun getWalletNameById(walletId: Long): String? {
         return walletProfileDao.getWalletNameById(walletId)
     }
 

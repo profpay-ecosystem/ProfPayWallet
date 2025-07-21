@@ -58,26 +58,7 @@ class PushReceiver : BroadcastReceiver(), CoroutineScope {
             launch {
                 val address = addressRepo.getAddressEntityByAddress(pushyObj.senderAddress)
                 if (address?.addressId != null) {
-                    tokenRepo.decreaseTronFrozenBalanceViaId(
-                        frozenBalance = pushyObj.amount.toBigInteger(),
-                        addressId = address.addressId,
-                        tokenName = pushyObj.transactionType
-                    )
                     transactionRepo.transactionSetProcessedUpdateFalseByTxId(pushyObj.transactionId)
-                }
-            }
-        }
-
-        if (pushyTransferSuccessfullyMessage != null) {
-            val pushyObj = localJson.decodeFromString<PushyTransferSuccessfullyMessage>(pushyTransferSuccessfullyMessage)
-            launch {
-                val address = addressRepo.getAddressEntityByAddress(pushyObj.senderAddress)
-                if (address?.addressId != null) {
-                    tokenRepo.decreaseTronFrozenBalanceViaId(
-                        frozenBalance = pushyObj.amount.toBigInteger(),
-                        addressId = address.addressId,
-                        tokenName = pushyObj.transactionType
-                    )
                 }
             }
         }

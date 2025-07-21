@@ -131,7 +131,7 @@ fun TXDetailsScreen(
 
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
-            setWalletName(viewModel.getWalletNameById(walletId))
+            setWalletName(viewModel.getWalletNameById(walletId) ?: "")
         }
     }
 

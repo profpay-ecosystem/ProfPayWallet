@@ -1,7 +1,6 @@
 package com.example.telegramWallet.ui.new_feature.wallet.tx_details
 
 import StackedSnakbarHostState
-import android.content.ClipData
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,7 +36,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -46,7 +44,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.example.telegramWallet.bridge.view_model.dto.transfer.TransferResult
 import com.example.telegramWallet.bridge.view_model.wallet.TXDetailsViewModel
+import com.example.telegramWallet.bridge.view_model.wallet.walletSot.WalletAddressViewModel
+import com.example.telegramWallet.data.database.entities.wallet.TokenEntity
 import com.example.telegramWallet.data.database.entities.wallet.TransactionEntity
+import com.example.telegramWallet.data.database.models.AddressWithTokens
 import com.example.telegramWallet.data.flow_db.repo.EstimateCommissionResult
 import com.example.telegramWallet.data.flow_db.repo.TransactionStatusResult
 import com.example.telegramWallet.data.utils.toSunAmount
@@ -64,9 +65,10 @@ import java.math.BigDecimal
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun bottomSheetRejectReceipt(
-    viewModel: TXDetailsViewModel,
-    transactionEntity: TransactionEntity,
-    snackbar: StackedSnakbarHostState
+    viewModel: WalletAddressViewModel,
+    addressWithTokens: AddressWithTokens?,
+    snackbar: StackedSnakbarHostState,
+    tokenName: String
 ): Pair<Boolean, (Boolean) -> Unit> {
     val coroutineScope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(
@@ -79,70 +81,56 @@ fun bottomSheetRejectReceipt(
     val keyboardController = LocalSoftwareKeyboardController.current
 
     val (isOpenSheet, setIsOpenSheet) = remember { mutableStateOf(false) }
-    var addressSending by remember { mutableStateOf(transactionEntity.senderAddress) }
     var valueAmount by remember { mutableStateOf("0.0") }
     val (commissionOnTransaction, setCommissionOnTransaction) = remember { mutableStateOf(BigDecimal.ZERO) }
     val commissionState by viewModel.stateCommission.collectAsStateWithLifecycle()
-    val transactionStatus by viewModel.transactionStatus.collectAsStateWithLifecycle()
 
     var isButtonEnabled by remember { mutableStateOf(false) }
 
     if (isOpenSheet) {
-        LaunchedEffect(transactionStatus) {
-            when (transactionStatus) {
-                is TransactionStatusResult.Loading -> {}
-                is TransactionStatusResult.Success -> {
-                    val isProcessed = (transactionStatus as TransactionStatusResult.Success).response.isProcessed
-                    val isError = (transactionStatus as TransactionStatusResult.Success).response.isError
-                    if (isProcessed) {
-                        withContext(Dispatchers.IO) {
-                            viewModel.transactionsRepo.transactionSetProcessedUpdateTrueByTxId(transactionEntity.txId)
-                        }
-
-                        keyboardController?.hide()
-                        setIsOpenSheet(false)
-                    }
-                }
-                is TransactionStatusResult.Error -> {}
-                is TransactionStatusResult.Empty -> {}
-            }
-        }
-
-        LaunchedEffect(transactionEntity.txId) {
-            viewModel.getTransactionStatus(transactionEntity.txId)
-        }
+        var addressSending by remember { mutableStateOf(addressWithTokens!!.addressEntity.address) }
+        val tokenEntity =
+            addressWithTokens!!.tokens.stream().filter { it.token.tokenName == tokenName }?.findFirst()
+                ?.orElse(null)
 
         LaunchedEffect(Unit, valueAmount, addressSending) {
             val addressEntity = withContext(Dispatchers.IO) {
-                viewModel.addressRepo.getAddressEntityByAddress(transactionEntity.receiverAddress)
+                viewModel.addressRepo.getAddressEntityByAddress(addressWithTokens.addressEntity.address)
             }
 
             if (addressEntity == null || valueAmount.isEmpty() || !viewModel.tron.addressUtilities.isValidTronAddress(addressSending)) return@LaunchedEffect
 
-            val requiredEnergy = withContext(Dispatchers.IO) {
-                viewModel.tron.transactions.estimateEnergy(
-                    fromAddress = addressEntity.address,
-                    toAddress = addressSending,
-                    privateKey = addressEntity.privateKey,
-                    amount = valueAmount.toBigDecimal().toSunAmount()
-                )
-            }
-            val requiredBandwidth = withContext(Dispatchers.IO) {
-                viewModel.tron.transactions.estimateBandwidth(
-                    fromAddress = addressEntity.address,
-                    toAddress = addressSending,
-                    privateKey = addressEntity.privateKey,
-                    amount = valueAmount.toBigDecimal().toSunAmount()
-                )
-            }
+            try {
+                val requiredEnergy = withContext(Dispatchers.IO) {
+                    viewModel.tron.transactions.estimateEnergy(
+                        fromAddress = addressEntity.address,
+                        toAddress = addressSending,
+                        privateKey = addressEntity.privateKey,
+                        amount = valueAmount.toBigDecimal().toSunAmount()
+                    )
+                }
+                val requiredBandwidth = withContext(Dispatchers.IO) {
+                    viewModel.tron.transactions.estimateBandwidth(
+                        fromAddress = addressEntity.address,
+                        toAddress = addressSending,
+                        privateKey = addressEntity.privateKey,
+                        amount = valueAmount.toBigDecimal().toSunAmount()
+                    )
+                }
 
-            withContext(Dispatchers.IO) {
-                viewModel.estimateCommission(
-                    address = transactionEntity.receiverAddress,
-                    bandwidth = requiredBandwidth.bandwidth,
-                    energy = requiredEnergy.energy
-                )
-            }
+                withContext(Dispatchers.IO) {
+                    val hasEnoughBandwidth =
+                        viewModel.tron.accounts.hasEnoughBandwidth(
+                            addressEntity.address,
+                            requiredBandwidth.bandwidth
+                        )
+                    viewModel.estimateCommission(
+                        address = addressWithTokens.addressEntity.address,
+                        bandwidth = if (hasEnoughBandwidth) 0 else requiredBandwidth.bandwidth,
+                        energy = if (tokenName == "TRX") 0 else requiredEnergy.energy
+                    )
+                }
+            } catch (e: NumberFormatException) { return@LaunchedEffect }
         }
 
         LaunchedEffect(commissionState) {
@@ -153,7 +141,7 @@ fun bottomSheetRejectReceipt(
                     isButtonEnabled = true
 
                     if (valueAmount == "0.0") {
-                        valueAmount = transactionEntity.amount.toTokenAmount().toDouble().toString()
+                        valueAmount = tokenEntity?.balanceWithoutFrozen?.toTokenAmount().toString()
                     }
                     setCommissionOnTransaction(commission.toBigDecimal())
                 }
@@ -168,11 +156,7 @@ fun bottomSheetRejectReceipt(
             modifier = Modifier.height(IntrinsicSize.Min),
             onDismissRequest = {
                 keyboardController?.hide()
-                coroutineScope.launch {
-                    sheetState.hide()
-                    delay(400)
-                    setIsOpenSheet(false)
-                }
+                setIsOpenSheet(false)
             },
             sheetState = sheetState,
         ) {
@@ -277,11 +261,7 @@ fun bottomSheetRejectReceipt(
                             shape = MaterialTheme.shapes.small.copy(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             onValueChange = {
-                                valueAmount = if (transactionEntity.tokenName == "TRX") {
-                                    it + commissionOnTransaction
-                                } else {
-                                    it
-                                }
+                                valueAmount = it
                             },
                             trailingIcon = {},
                             colors = TextFieldDefaults.colors(
@@ -350,7 +330,6 @@ fun bottomSheetRejectReceipt(
                     }
                 }
 
-
                 Button(
                     enabled = isButtonEnabled,
                     onClick = {
@@ -360,16 +339,18 @@ fun bottomSheetRejectReceipt(
                                 val result = withContext(Dispatchers.IO) {
                                     viewModel.rejectTransaction(
                                         toAddress = addressSending,
-                                        transaction = transactionEntity,
+                                        addressWithTokens = addressWithTokens,
                                         amount = valueAmount.toBigDecimal().toSunAmount(),
-                                        commission = commissionOnTransaction.toSunAmount()
+                                        commission = commissionOnTransaction.toSunAmount(),
+                                        tokenName = tokenName,
+                                        tokenEntity = tokenEntity
                                     )
                                 }
 
                                 when (result) {
                                     is TransferResult.Success -> snackbar.showSuccessSnackbar(
                                         "Успешное действие",
-                                        "Успешный возврат средств.",
+                                        "Успешно отправлено ${valueAmount.toBigInteger().toTokenAmount()} $tokenName",
                                         "Закрыть",
                                     )
                                     is TransferResult.Failure -> snackbar.showErrorSnackbar(
@@ -379,11 +360,7 @@ fun bottomSheetRejectReceipt(
                                     )
                                 }
 
-                                coroutineScope.launch {
-                                    sheetState.hide()
-                                    delay(400)
-                                    setIsOpenSheet(false)
-                                }
+                                setIsOpenSheet(false)
                                 isButtonEnabled = true
                             }
                         }

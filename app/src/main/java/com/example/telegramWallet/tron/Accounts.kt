@@ -3,6 +3,7 @@ package com.example.telegramWallet.tron
 import org.tron.trident.core.ApiWrapper
 import org.tron.trident.core.contract.Contract
 import org.tron.trident.core.contract.Trc20Contract
+import org.tron.trident.core.key.KeyPair
 import org.tron.trident.proto.Response
 import java.math.BigInteger
 
@@ -47,5 +48,18 @@ class Accounts {
 
         val max = BigInteger.valueOf(Long.MAX_VALUE).multiply(BigInteger.valueOf(10L).pow(6))
         return result >= max
+    }
+
+    fun hasEnoughBandwidth(address: String?, requiredBandwidth: Long): Boolean {
+        val wrapper = ApiWrapper("5.39.223.8:59151", "5.39.223.8:50061", KeyPair.generate().toPrivateKey())
+        val resources = wrapper.getAccountResource(address)
+
+        val freeNetRemaining: Long = resources.freeNetLimit - resources.freeNetUsed
+        val paidNetRemaining: Long = resources.netLimit - resources.netUsed
+
+        val totalAvailableBandwidth = freeNetRemaining + paidNetRemaining
+
+        wrapper.close()
+        return totalAvailableBandwidth >= requiredBandwidth
     }
 }

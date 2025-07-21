@@ -13,7 +13,7 @@ interface WalletProfileDao {
     fun insertNewWalletProfileEntity(walletProfileEntity: WalletProfileEntity): Long
 
     @Query("SELECT name FROM wallet_profile WHERE id = :walletId")
-    fun getWalletNameById(walletId: Long): String
+    fun getWalletNameById(walletId: Long): String?
 
     @Query("SELECT id, name FROM wallet_profile")
     fun getListAllWallets(): LiveData<List<WalletProfileModel>>

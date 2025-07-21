@@ -1,5 +1,6 @@
 package com.example.telegramWallet.tron
 
+import android.util.Log
 import com.example.telegramWallet.data.utils.toTokenAmount
 import com.google.protobuf.ByteString
 import org.tron.trident.abi.FunctionEncoder
@@ -18,6 +19,12 @@ import org.tron.trident.proto.Chain
 import org.tron.trident.proto.Response
 import org.tron.trident.proto.Response.TransactionExtention
 import java.math.BigInteger
+import java.security.MessageDigest
+
+data class SignedTransactionData(
+    val txid: String,
+    val signedTxn: ByteString?
+)
 
 // Обработка Tron API касаемо раздела транзакций.
 class Transactions() {
@@ -84,7 +91,7 @@ class Transactions() {
         toAddress: String,
         privateKey: String,
         amount: BigInteger
-    ): ByteString {
+    ): SignedTransactionData {
         val wrapper = ApiWrapper("5.39.223.8:59151", "5.39.223.8:50061", privateKey)
 
         val txnExt: TransactionExtention = wrapper.transfer(fromAddress, toAddress, amount.toLong())
@@ -93,9 +100,15 @@ class Transactions() {
         }
 
         val signedTransaction: Chain.Transaction = wrapper.signTransaction(txnExt)
+        val rawDataBytes = signedTransaction.rawData.toByteArray()
+        val txidBytes = MessageDigest.getInstance("SHA-256").digest(rawDataBytes)
+        val txidHex = txidBytes.joinToString("") { "%02x".format(it) }
 
         wrapper.close()
-        return signedTransaction.toByteString()
+        return SignedTransactionData(
+            txid = txidHex,
+            signedTxn = signedTransaction.toByteString()
+        )
     }
 
     fun getSignedUsdtTransaction(
@@ -103,7 +116,7 @@ class Transactions() {
         toAddress: String,
         privateKey: String,
         amount: BigInteger
-    ): ByteString? {
+    ): SignedTransactionData {
         val wrapper = ApiWrapper("5.39.223.8:59151", "5.39.223.8:50061", privateKey)
         val contractAddress = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
 
@@ -120,8 +133,15 @@ class Transactions() {
 
         val signedTxn: Chain.Transaction = wrapper.signTransaction(builder.build())
 
+        val rawDataBytes = signedTxn.rawData.toByteArray()
+        val txidBytes = MessageDigest.getInstance("SHA-256").digest(rawDataBytes)
+        val txidHex = txidBytes.joinToString("") { "%02x".format(it) }
+
         wrapper.close()
-        return signedTxn.toByteString()
+        return SignedTransactionData(
+            txid = txidHex,
+            signedTxn = signedTxn.toByteString()
+        )
     }
 
     fun estimateBandwidthTrxTransaction(
