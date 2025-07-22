@@ -311,7 +311,6 @@ class UsdtTransferScheduler(
             async { addressRepo.getAddressEntityByAddress(toAddress) }
         ).awaitAll()
 
-        val walletId = senderAddressEntity?.walletId ?: receiverAddressEntity?.walletId ?: 0
         val senderAddressId = senderAddressEntity?.addressId
         val receiverAddressId = receiverAddressEntity?.addressId
 
@@ -323,12 +322,12 @@ class UsdtTransferScheduler(
                     receiverAddressId = receiverAddressId,
                     senderAddress = ownerAddress,
                     receiverAddress = toAddress,
-                    walletId = walletId,
-                    tokenName = tokenName, // TODO: Плоховато..
+                    walletId = 0,
+                    tokenName = tokenName,
                     amount = BigInteger.valueOf(contract.parameter.value.amount),
                     timestamp = transaction.block_timestamp,
                     status = "Success",
-                    type = assignTransactionType(idSend = senderAddressId, idReceive = receiverAddressId)
+                    type = assignTransactionType(idSend = senderAddressId, idReceive = receiverAddressId, isCentralAddress = true)
                 )
             )
         } catch (e: SQLiteConstraintException) {

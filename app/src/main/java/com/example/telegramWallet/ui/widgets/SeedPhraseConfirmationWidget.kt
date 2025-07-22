@@ -43,8 +43,8 @@ import androidx.compose.ui.unit.dp
 import com.example.telegramWallet.tron.AddressGenerateResult
 import com.example.telegramWallet.ui.app.theme.BackgroundDark
 import com.example.telegramWallet.ui.app.theme.PubAddressDark
-import com.example.telegramWallet.ui.new_screens.createOrRecoveryWallet.BottomButtonsForCoRFeature
-import com.example.telegramWallet.ui.new_screens.createOrRecoveryWallet.TitleCreateOrRecoveryWalletFeature
+import com.example.telegramWallet.ui.screens.createOrRecoveryWallet.BottomButtonsForCoRFeature
+import com.example.telegramWallet.ui.screens.createOrRecoveryWallet.TitleCreateOrRecoveryWalletFeature
 import com.example.telegramWallet.ui.shared.utils.checkingValuesInList
 import kotlin.random.Random
 

@@ -51,21 +51,20 @@ data class TransactionEntity(
     @ColumnInfo(name = "type", defaultValue = "0") val type: Int,
 )
 
-enum class TransactionType(val index: Int){
+enum class TransactionType(val index: Int) {
     RECEIVE(0),
     SEND(1),
     BETWEEN_YOURSELF(2),
-    TRIGGER_SMART_CONTRACT(3)
+    TRIGGER_SMART_CONTRACT(3),
+    CENTRAL_ADDRESS(4),
 }
-fun assignTransactionType(idSend: Long?, idReceive: Long?): Int {
-    return if (idSend == null && idReceive == null){
-        -1
-    } else if (idSend != null && idReceive == null){
-        TransactionType.SEND.index
-    } else if (idSend == null){
-        TransactionType.RECEIVE.index
-    } else {
-        TransactionType.BETWEEN_YOURSELF.index
-    }
 
+fun assignTransactionType(idSend: Long?, idReceive: Long?, isCentralAddress: Boolean? = false): Int {
+    return when {
+        isCentralAddress == true -> TransactionType.CENTRAL_ADDRESS.index
+        idSend == null && idReceive == null -> -1
+        idSend != null && idReceive == null -> TransactionType.SEND.index
+        idSend == null -> TransactionType.RECEIVE.index
+        else -> TransactionType.BETWEEN_YOURSELF.index
+    }
 }

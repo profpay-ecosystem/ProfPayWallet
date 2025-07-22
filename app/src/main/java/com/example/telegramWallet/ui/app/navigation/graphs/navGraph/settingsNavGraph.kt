@@ -6,12 +6,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.example.telegramWallet.ui.app.navigation.BottomBarScreen
 import com.example.telegramWallet.ui.app.navigation.graphs.Graph
-import com.example.telegramWallet.ui.new_screens.settings.SettingsAccountScreen
-import com.example.telegramWallet.ui.new_screens.settings.SettingsNotificationsScreen
-import com.example.telegramWallet.ui.new_screens.settings.SettingsScreen
-import com.example.telegramWallet.ui.new_screens.settings.SettingsSecurityScreen
-import com.example.telegramWallet.ui.new_screens.lockScreen.CreateLockScreen
-import com.example.telegramWallet.ui.new_screens.lockScreen.LockScreen
+import com.example.telegramWallet.ui.screens.settings.SettingsAccountScreen
+import com.example.telegramWallet.ui.screens.settings.SettingsNotificationsScreen
+import com.example.telegramWallet.ui.screens.settings.SettingsScreen
+import com.example.telegramWallet.ui.screens.settings.SettingsSecurityScreen
+import com.example.telegramWallet.ui.screens.lockScreen.CreateLockScreen
+import com.example.telegramWallet.ui.screens.lockScreen.LockScreen
 
 fun NavGraphBuilder.settingsNavGraph(navController: NavController) {
     navigation(

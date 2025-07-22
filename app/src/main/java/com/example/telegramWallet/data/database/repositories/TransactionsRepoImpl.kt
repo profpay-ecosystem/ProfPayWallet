@@ -16,13 +16,17 @@ interface TransactionsRepo {
     suspend fun getAllRelatedTransactions(walletId: Long): LiveData<List<TransactionModel>>
     suspend fun getTransactionLiveDataById(transactionId: Long): LiveData<TransactionEntity>
     suspend fun transactionSetProcessedUpdateTrueById(id: Long)
-
-    suspend fun getTransactionsByAddressReceiverAndTokenLD(walletId: Long, senderReceiver: String, tokenName: String): LiveData<List<TransactionModel>>
-    suspend fun getTransactionsByAddressSenderAndTokenLD(walletId: Long, senderAddress: String, tokenName: String): LiveData<List<TransactionModel>>
     suspend fun transactionSetProcessedUpdateFalseByTxId(txId: String)
     suspend fun getTransactionByTxId(txId: String): TransactionEntity
     suspend fun transactionSetProcessedUpdateFalseById(id: Long)
     suspend fun transactionSetProcessedUpdateTrueByTxId(txId: String)
+    suspend fun getTransactionsByAddressAndTokenLD(
+        walletId: Long,
+        address: String,
+        tokenName: String,
+        isSender: Boolean,
+        isCentralAddress: Boolean
+    ): LiveData<List<TransactionModel>>
 }
 
 @Singleton
@@ -60,22 +64,6 @@ class TransactionsRepoImpl @Inject constructor(private val transactionsDao: Tran
         }
     }
 
-    override suspend fun getTransactionsByAddressReceiverAndTokenLD(
-        walletId: Long,
-        senderReceiver: String,
-        tokenName: String
-    ): LiveData<List<TransactionModel>> {
-        return transactionsDao.getTransactionsByAddressReceiverAndTokenLD(walletId,senderReceiver,tokenName)
-    }
-
-    override suspend fun getTransactionsByAddressSenderAndTokenLD(
-        walletId: Long,
-        senderAddress: String,
-        tokenName: String
-    ): LiveData<List<TransactionModel>> {
-        return transactionsDao.getTransactionsByAddressSenderAndTokenLD(walletId,senderAddress,tokenName)
-    }
-
     override suspend fun transactionSetProcessedUpdateFalseByTxId(txId: String) {
         return transactionsDao.transactionSetProcessedUpdateFalseByTxId(txId)
     }
@@ -90,5 +78,21 @@ class TransactionsRepoImpl @Inject constructor(private val transactionsDao: Tran
 
     override suspend fun transactionSetProcessedUpdateTrueByTxId(txId: String) {
         return transactionsDao.transactionSetProcessedUpdateTrueByTxId(txId)
+    }
+
+    override suspend fun getTransactionsByAddressAndTokenLD(
+        walletId: Long,
+        address: String,
+        tokenName: String,
+        isSender: Boolean,
+        isCentralAddress: Boolean
+    ): LiveData<List<TransactionModel>> {
+        return transactionsDao.getTransactionsByAddressAndTokenLD(
+            walletId = walletId,
+            address = address,
+            tokenName = tokenName,
+            isSender = isSender,
+            isCentralAddress = isCentralAddress
+        )
     }
 }

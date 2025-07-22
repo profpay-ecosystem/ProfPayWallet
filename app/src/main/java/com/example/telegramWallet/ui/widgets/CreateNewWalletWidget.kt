@@ -43,9 +43,9 @@ import com.example.telegramWallet.tron.AddressGenerateResult
 import com.example.telegramWallet.ui.app.theme.BackgroundDark
 import com.example.telegramWallet.ui.app.theme.DarkBlue
 import com.example.telegramWallet.ui.app.theme.RedColor
-import com.example.telegramWallet.ui.new_feature.createOrRecoveryWallet.bottomSheetAttentionWhenSavingMnemonic
-import com.example.telegramWallet.ui.new_screens.createOrRecoveryWallet.BottomButtonsForCoRFeature
-import com.example.telegramWallet.ui.new_screens.createOrRecoveryWallet.TitleCreateOrRecoveryWalletFeature
+import com.example.telegramWallet.ui.feature.createOrRecoveryWallet.bottomSheetAttentionWhenSavingMnemonic
+import com.example.telegramWallet.ui.screens.createOrRecoveryWallet.BottomButtonsForCoRFeature
+import com.example.telegramWallet.ui.screens.createOrRecoveryWallet.TitleCreateOrRecoveryWalletFeature
 
 @Composable
 fun CreateNewWalletWidget(

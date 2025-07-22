@@ -8,15 +8,16 @@ import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.example.telegramWallet.ui.app.navigation.BottomBarScreen
 import com.example.telegramWallet.ui.app.navigation.graphs.Graph
-import com.example.telegramWallet.ui.new_screens.wallet.ReceiveFromWalletSotsScreen
-import com.example.telegramWallet.ui.new_screens.wallet.SendFromWalletInfoScreen
-import com.example.telegramWallet.ui.new_screens.wallet.TXDetailsScreen
-import com.example.telegramWallet.ui.new_screens.wallet.WalletAddressScreen
-import com.example.telegramWallet.ui.new_screens.wallet.WalletArchivalSotsScreen
-import com.example.telegramWallet.ui.new_screens.wallet.WalletInfoScreen
-import com.example.telegramWallet.ui.new_screens.wallet.WalletSotsScreen
-import com.example.telegramWallet.ui.new_screens.wallet.WalletSystemScreen
-import com.example.telegramWallet.ui.new_screens.wallet.WalletSystemTRXScreen
+import com.example.telegramWallet.ui.screens.wallet.CentralAddressTxHistoryScreen
+import com.example.telegramWallet.ui.screens.wallet.ReceiveFromWalletSotsScreen
+import com.example.telegramWallet.ui.screens.wallet.SendFromWalletInfoScreen
+import com.example.telegramWallet.ui.screens.wallet.TXDetailsScreen
+import com.example.telegramWallet.ui.screens.wallet.WalletAddressScreen
+import com.example.telegramWallet.ui.screens.wallet.WalletArchivalSotsScreen
+import com.example.telegramWallet.ui.screens.wallet.WalletInfoScreen
+import com.example.telegramWallet.ui.screens.wallet.WalletSotsScreen
+import com.example.telegramWallet.ui.screens.wallet.WalletSystemScreen
+import com.example.telegramWallet.ui.screens.wallet.WalletSystemTRXScreen
 
 fun NavGraphBuilder.profileNavGraph(navController: NavController) {
     navigation(
@@ -66,6 +67,12 @@ fun NavGraphBuilder.profileNavGraph(navController: NavController) {
         }
         composable(WalletInfo.WalletSystemTRX.route) {
             WalletSystemTRXScreen(
+                goToBack = { navController.navigateUp() },
+                goToCentralAddressTxHistory = { navController.navigate(route = WalletInfo.CentralAddressTxHistory.route) },
+            )
+        }
+        composable(WalletInfo.CentralAddressTxHistory.route) {
+            CentralAddressTxHistoryScreen(
                 goToBack = { navController.navigateUp() },
             )
         }
@@ -139,6 +146,7 @@ sealed class WalletInfo(val route: String) {
     object TXDetails : WalletInfo(route = "tx_details")
     object WalletSystem : WalletInfo(route = "wallet_system")
     object WalletSystemTRX : WalletInfo(route = "wallet_system_trx")
+    object CentralAddressTxHistory : WalletInfo(route = "central_address_tx_history")
 }
 
 sealed class WalletSots(val route: String) {

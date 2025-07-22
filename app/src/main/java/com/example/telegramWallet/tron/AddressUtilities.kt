@@ -371,6 +371,7 @@ class AddressUtilities {
                 return BigInteger.valueOf(chainParameter.value)
             }
         }
+        wrapper.close()
         return BigInteger.ZERO
     }
 

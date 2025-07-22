@@ -41,32 +41,28 @@ interface TransactionsDao {
 
     @Transaction
     @Query(
-        "SELECT *, DATE(ROUND(transactions.timestamp / 1000), 'unixepoch') AS transaction_date " +
-                "FROM transactions " +
-                "WHERE wallet_id = :walletId " +
-                "AND sender_address = :senderAddress " +
-                "AND token_name = :tokenName " +
-                "ORDER BY timestamp DESC"
+            """
+        SELECT *, DATE(ROUND(transactions.timestamp / 1000), 'unixepoch') AS transaction_date
+        FROM transactions
+        WHERE wallet_id = :walletId
+          AND token_name = :tokenName
+          AND (
+            (:isSender = 1 AND sender_address = :address)
+            OR
+            (:isSender = 0 AND receiver_address = :address)
+          )
+          AND (
+            :isCentralAddress = 1 AND type = 4
+          )
+        ORDER BY timestamp DESC
+        """
     )
-    fun getTransactionsByAddressSenderAndTokenLD(
+    fun getTransactionsByAddressAndTokenLD(
         walletId: Long,
-        senderAddress: String,
-        tokenName: String
-    ): LiveData<List<TransactionModel>>
-
-    @Transaction
-    @Query(
-        "SELECT *, DATE(ROUND(transactions.timestamp / 1000), 'unixepoch') AS transaction_date " +
-                "FROM transactions " +
-                "WHERE wallet_id = :walletId " +
-                "AND receiver_address = :senderReceiver " +
-                "AND token_name = :tokenName " +
-                "ORDER BY timestamp DESC"
-    )
-    fun getTransactionsByAddressReceiverAndTokenLD(
-        walletId: Long,
-        senderReceiver: String,
-        tokenName: String
+        address: String,
+        tokenName: String,
+        isSender: Boolean,
+        isCentralAddress: Boolean
     ): LiveData<List<TransactionModel>>
 
     @Query("SELECT * FROM transactions WHERE tx_id = :txId")

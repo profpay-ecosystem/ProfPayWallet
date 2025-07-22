@@ -8,9 +8,11 @@ plugins {
     id("com.google.dagger.hilt.android")
     id("com.google.devtools.ksp")
     id("com.google.protobuf") version "0.9.5" apply true
-    kotlin("plugin.serialization") version "1.9.21"
-    id("io.sentry.android.gradle") version "4.11.0"
+    kotlin("plugin.serialization") version "2.2.0"
+    id("io.sentry.android.gradle") version "5.8.0"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
 }
+
 sentry {
     tracingInstrumentation {
         enabled.set(true)
@@ -114,9 +116,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
     buildFeatures {
         compose = true
         buildConfig = true
@@ -143,6 +142,10 @@ android {
             resources.srcDir("src/androidTest/resources")
         }
     }
+}
+
+kotlin {
+    jvmToolchain(17)
 }
 
 project.configurations.configureEach {
@@ -180,20 +183,20 @@ buildscript {
     dependencies {
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.21")
         classpath("com.google.protobuf:protobuf-gradle-plugin:0.9.5")
-        classpath("com.google.gms:google-services:4.4.2")
+        classpath("com.google.gms:google-services:4.4.3")
         classpath(kotlin("serialization", version = "1.9.21"))
     }
 }
 
 dependencies {
     implementation(files("libs/bitcoinj-core-0.17-SNAPSHOT.jar"))
-    val navVersion = "2.7.7"
-    val roomVersion = "2.6.1"
-    val lifecycleVersion = "2.7.0"
-    val grpcVersion = "1.63.0"
+    val navVersion = "2.9.2"
+    val roomVersion = "2.7.2"
+    val lifecycleVersion = "2.9.2"
+    val grpcVersion = "1.73.0"
 
     implementation("javax.annotation:javax.annotation-api:1.3.2")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.6")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.2")
     // Алгоритм шифрования
     implementation("org.mindrot:jbcrypt:0.4")
 
@@ -201,11 +204,11 @@ dependencies {
     implementation("androidx.biometric:biometric:1.1.0")
 
     // gRPC libs
-    implementation("com.google.protobuf:protobuf-java:4.30.2")
-    implementation("com.google.protobuf:protobuf-java-util:4.30.2")
+    implementation("com.google.protobuf:protobuf-java:4.31.1")
+    implementation("com.google.protobuf:protobuf-java-util:4.31.1")
 
-    implementation("io.grpc:grpc-netty-shaded:1.60.1")
-    implementation("io.grpc:grpc-netty:1.60.0")
+    implementation("io.grpc:grpc-netty-shaded:1.73.0")
+    implementation("io.grpc:grpc-netty:1.73.0")
     implementation("io.grpc:grpc-protobuf:$grpcVersion")
     implementation("io.grpc:grpc-stub:$grpcVersion")
     implementation("io.grpc:grpc-okhttp:$grpcVersion")
@@ -215,11 +218,11 @@ dependencies {
 
     implementation("androidx.navigation:navigation-compose:$navVersion")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
-    implementation("com.google.dagger:hilt-android:2.49")
-    kapt("com.google.dagger:hilt-android-compiler:2.49")
-    implementation("androidx.core:core-ktx:1.13.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.2")
-    implementation("androidx.activity:activity-compose:1.9.0")
+    implementation("com.google.dagger:hilt-android:2.57")
+    kapt("com.google.dagger:hilt-android-compiler:2.57")
+    implementation("androidx.core:core-ktx:1.16.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.2")
+    implementation("androidx.activity:activity-compose:1.10.1")
     implementation(platform("androidx.compose:compose-bom:2024.06.00"))
     implementation("androidx.compose.ui:ui:1.7.8")
     implementation("androidx.compose.ui:ui-graphics")
@@ -228,7 +231,7 @@ dependencies {
     // LiveData
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion")
     // Kotlin
-    implementation("androidx.compose.runtime:runtime-livedata:1.6.8")
+    implementation("androidx.compose.runtime:runtime-livedata:1.8.3")
 
     // Room DataBase
     implementation("androidx.room:room-runtime:$roomVersion")
@@ -239,62 +242,67 @@ dependencies {
     implementation("androidx.room:room-paging:$roomVersion")
 
     //
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
 
     // bip39 mnemonic
-    implementation("cash.z.ecc.android:kotlin-bip39:1.0.6")
+    implementation("cash.z.ecc.android:kotlin-bip39:1.0.9")
 
     // JSON Parse
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
 
     // Krontab
-    implementation("dev.inmo:krontab:2.2.4")
+    implementation("dev.inmo:krontab:2.7.2")
 
     // OkHttp Client
-    implementation("com.squareup.okhttp3:okhttp:4.10.0")
+    implementation("com.squareup.okhttp3:okhttp:5.1.0")
 
     // iText7
-    implementation("com.itextpdf:itext-core:8.0.2")
+    implementation("com.itextpdf:itext-core:9.2.0")
 
     // interactive tips
-    implementation("ly.com.tahaben:showcase-layout-compose:1.0.5-beta")
+    implementation("ly.com.tahaben:showcase-layout-compose:1.0.9")
 
     // shapes(графика)
-    implementation("androidx.graphics:graphics-shapes:1.0.0-beta01")
+    implementation("androidx.graphics:graphics-shapes:1.0.1")
 
     // Контроллер UI
-    implementation("com.google.accompanist:accompanist-systemuicontroller:0.27.0")
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.36.0")
 
     // Pusher Notification
-    implementation("com.pusher:pusher-java-client:2.4.2")
+    implementation("com.pusher:pusher-java-client:2.4.4")
 
     // QR-code builder
-    implementation("com.google.zxing:core:3.4.1")
+    implementation("com.google.zxing:core:3.5.3")
 
     // google-font
-    implementation("androidx.compose.ui:ui-text-google-fonts:1.6.0")
+    implementation("androidx.compose.ui:ui-text-google-fonts:1.8.3")
 
     implementation("io.github.rizmaulana:compose-stacked-snackbar:1.0.4")
 
-    implementation("me.pushy:sdk:1.0.113")
+    implementation("me.pushy:sdk:1.0.123")
 
-    implementation("io.sentry:sentry-android:7.14.0")
-    implementation("io.sentry:sentry-compose-android:7.14.0")
+    implementation("io.sentry:sentry-android:8.17.0")
+    implementation("io.sentry:sentry-compose-android:8.17.0")
+    implementation("androidx.lifecycle:lifecycle-process:2.9.2")
+
+    implementation("androidx.datastore:datastore:1.1.7")
+    implementation("androidx.datastore:datastore-preferences:1.1.7")
+    implementation("androidx.security:security-crypto:1.1.0-beta01")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
     androidTestImplementation(platform("androidx.compose:compose-bom:2024.06.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-    androidTestImplementation("org.mockito:mockito-android:4.8.0")
+    androidTestImplementation("org.mockito:mockito-android:5.18.0")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
-    testImplementation("io.mockk:mockk:1.13.10")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("io.mockk:mockk:1.14.5")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
     testImplementation("androidx.arch.core:core-testing:2.2.0")
-    testImplementation("org.slf4j:slf4j-simple:1.7.36")
+    testImplementation("org.slf4j:slf4j-simple:2.0.17")
 }
 
 kapt {

@@ -91,15 +91,21 @@ class WalletAddressViewModel @Inject constructor(
         }
     }
 
-    fun getTransactionsByAddressSenderAndTokenLD(walletId: Long, senderAddress: String, tokenName: String): LiveData<List<TransactionModel>> {
+    fun getTransactionsByAddressAndTokenLD(
+        walletId: Long,
+        address: String,
+        tokenName: String,
+        isSender: Boolean,
+        isCentralAddress: Boolean
+    ): LiveData<List<TransactionModel>> {
         return liveData(Dispatchers.IO) {
-            emitSource(transactionsRepo.getTransactionsByAddressSenderAndTokenLD(walletId, senderAddress, tokenName))
-        }
-    }
-
-    fun getTransactionsByAddressReceiverAndTokenLD(walletId: Long, receiverAddress: String, tokenName: String): LiveData<List<TransactionModel>> {
-        return liveData(Dispatchers.IO) {
-            emitSource(transactionsRepo.getTransactionsByAddressReceiverAndTokenLD(walletId, receiverAddress, tokenName))
+            emitSource(transactionsRepo.getTransactionsByAddressAndTokenLD(
+                walletId = walletId,
+                address = address,
+                tokenName = tokenName,
+                isSender = isSender,
+                isCentralAddress = isCentralAddress
+            ))
         }
     }
 

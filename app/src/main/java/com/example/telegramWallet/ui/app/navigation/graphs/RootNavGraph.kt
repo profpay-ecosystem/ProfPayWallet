@@ -13,9 +13,9 @@ import androidx.navigation.compose.composable
 import com.example.telegramWallet.R
 import com.example.telegramWallet.ui.app.navigation.graphs.navGraph.coRAddressNavGraph
 import com.example.telegramWallet.ui.app.navigation.HomeScreen
-import com.example.telegramWallet.ui.new_screens.lockScreen.BlockedAppScreen
-import com.example.telegramWallet.ui.new_screens.lockScreen.CreateLockScreen
-import com.example.telegramWallet.ui.new_screens.lockScreen.LockScreen
+import com.example.telegramWallet.ui.screens.lockScreen.BlockedAppScreen
+import com.example.telegramWallet.ui.screens.lockScreen.CreateLockScreen
+import com.example.telegramWallet.ui.screens.lockScreen.LockScreen
 
 
 @RequiresApi(Build.VERSION_CODES.S)

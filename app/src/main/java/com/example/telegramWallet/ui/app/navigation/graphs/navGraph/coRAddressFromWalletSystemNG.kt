@@ -5,12 +5,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.example.telegramWallet.ui.app.navigation.graphs.Graph
-import com.example.telegramWallet.ui.new_screens.createOrRecoveryWallet.CreateNewWalletScreen
-import com.example.telegramWallet.ui.new_screens.createOrRecoveryWallet.CreateOrRecoverWalletScreen
-import com.example.telegramWallet.ui.new_screens.createOrRecoveryWallet.CreatedWalletAddingScreen
-import com.example.telegramWallet.ui.new_screens.createOrRecoveryWallet.RecoverWalletScreen
-import com.example.telegramWallet.ui.new_screens.createOrRecoveryWallet.RecoveringWalletAddingScreen
-import com.example.telegramWallet.ui.new_screens.createOrRecoveryWallet.SeedPhraseConfirmationScreen
+import com.example.telegramWallet.ui.screens.createOrRecoveryWallet.CreateNewWalletScreen
+import com.example.telegramWallet.ui.screens.createOrRecoveryWallet.CreateOrRecoverWalletScreen
+import com.example.telegramWallet.ui.screens.createOrRecoveryWallet.CreatedWalletAddingScreen
+import com.example.telegramWallet.ui.screens.createOrRecoveryWallet.RecoverWalletScreen
+import com.example.telegramWallet.ui.screens.createOrRecoveryWallet.RecoveringWalletAddingScreen
+import com.example.telegramWallet.ui.screens.createOrRecoveryWallet.SeedPhraseConfirmationScreen
 
 fun NavGraphBuilder.coRAddressFromWalletSystemNG(navController: NavHostController) {
     navigation(

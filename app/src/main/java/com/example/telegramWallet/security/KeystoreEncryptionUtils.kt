@@ -61,6 +61,3 @@ class KeystoreEncryptionUtils {
         return cipher.doFinal(encryptedData)
     }
 }
-
-
-
