@@ -129,7 +129,7 @@ fun WelcomingScreen(goToCOR: () -> Unit) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 56.dp, bottom = 24.dp),
+                                .padding(top = 56.dp, bottom = 32.dp),
                             horizontalArrangement = Arrangement.End
                         ) {
                             Card(
