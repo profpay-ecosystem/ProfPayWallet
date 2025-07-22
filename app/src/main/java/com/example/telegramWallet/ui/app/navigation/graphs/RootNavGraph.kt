@@ -32,7 +32,7 @@ fun RootNavigationGraph(navController: NavHostController, isBlockedApp: Boolean)
         composable(route = Graph.CREATE_LOCK_SCREEN) {
             CreateLockScreen(
                 toNavigate = {
-                    navController.navigate(route = Graph.CREATE_OR_RECOVERY_ADDRESS_FS)
+                    navController.navigate(route = Graph.WELCOMING_SCREEN)
                 }
             )
             BackHandler {}
@@ -75,7 +75,7 @@ fun RootNavigationGraph(navController: NavHostController, isBlockedApp: Boolean)
         }
 
         if (isFirstStart && !pinCode.equals("startInit")) {
-            navController.navigate(route = Graph.CREATE_OR_RECOVERY_ADDRESS_FS)
+            navController.navigate(route = Graph.WELCOMING_SCREEN)
         }
     }
 
@@ -89,7 +89,7 @@ object Graph {
     const val CREATE_LOCK_SCREEN = "create_lock_screen"
     const val LOCK_SCREEN = "lock_screen"
     const val BLOCKED_APP_SCREEN = "blocked_app_screen"
-    const val CREATE_OR_RECOVERY_ADDRESS_FS = "create_or_recover_address_fs"
+    const val WELCOMING_SCREEN = "welcoming_screen"
     const val CREATE_OR_RECOVERY_ADDRESS = "create_or_recover_address"
     const val FIRST_START = "first_start"
 }

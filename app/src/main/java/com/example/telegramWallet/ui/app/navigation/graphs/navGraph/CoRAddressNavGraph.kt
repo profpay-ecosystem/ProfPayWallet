@@ -12,13 +12,22 @@ import com.example.telegramWallet.ui.new_screens.createOrRecoveryWallet.CreatedW
 import com.example.telegramWallet.ui.new_screens.createOrRecoveryWallet.RecoverWalletScreen
 import com.example.telegramWallet.ui.new_screens.createOrRecoveryWallet.RecoveringWalletAddingScreen
 import com.example.telegramWallet.ui.new_screens.createOrRecoveryWallet.SeedPhraseConfirmationScreen
+import com.example.telegramWallet.ui.new_screens.createOrRecoveryWallet.WelcomingScreen
 
 fun NavGraphBuilder.coRAddressNavGraph(navController: NavHostController) {
     navigation(
         route = Graph.FIRST_START,
-        startDestination = Graph.CREATE_OR_RECOVERY_ADDRESS_FS
+//        startDestination = Graph.CREATE_OR_RECOVERY_ADDRESS_FS
+        startDestination = Graph.WELCOMING_SCREEN
     ) {
-        composable(route = Graph.CREATE_OR_RECOVERY_ADDRESS_FS) {
+        composable(route = Graph.WELCOMING_SCREEN) {
+            WelcomingScreen(
+                goToCOR = {
+                    navController.navigate(route = WelcomingScreen.CreateOrRecoverWalletFS.route)
+                }
+            )
+        }
+        composable(route = WelcomingScreen.CreateOrRecoverWalletFS.route) {
             CreateOrRecoverWalletScreen(
                 goToCreateNewWallet = {
                     navController.navigate(route = CreateOrRecoverWalletFS.CreateNewWalletFS.route)
@@ -87,9 +96,13 @@ fun NavGraphBuilder.coRAddressNavGraph(navController: NavHostController) {
     }
 }
 
+sealed class WelcomingScreen(val route: String) {
+    data object CreateOrRecoverWalletFS : WelcomingScreen(route = "create_or_recover_wallet_fs")
+}
+
 sealed class CreateOrRecoverWalletFS(val route: String) {
     data object CreateNewWalletFS : CreateOrRecoverWalletFS(route = "create_new_wallet_fs")
-    data object RecoverWalletFS : CreateOrRecoverWalletFS(route = "recover_new_wallet_fs")
+    data object RecoverWalletFS : CreateOrRecoverWalletFS(route = "recover_wallet_fs")
 }
 
 sealed class RecoverWalletFS(val route: String) {
