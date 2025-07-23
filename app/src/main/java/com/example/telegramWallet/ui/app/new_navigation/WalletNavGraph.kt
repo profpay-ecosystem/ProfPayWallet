@@ -28,7 +28,7 @@ fun NavGraphBuilder.walletNavGraph(navController: NavController) {
             )
         }
 
-        composable(AuthRoute.LockScreen.route) {
+        composable(AuthRoute.PinLockScreen.route) {
             LockScreen(toNavigate = { navController.navigate(Graph.HOME) })
         }
     }

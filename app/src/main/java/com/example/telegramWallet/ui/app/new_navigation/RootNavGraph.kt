@@ -14,5 +14,6 @@ fun RootNavGraph(navController: NavHostController, startDestination: String) {
     ) {
         onboardingNavGraph(navController)
         mainNavGraph(navController)
+        authNavGraph(navController, startDestination)
     }
 }
