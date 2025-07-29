@@ -26,6 +26,7 @@ fun NavGraphBuilder.coRAddressNavGraph(navController: NavHostController) {
                     navController.navigate(route = WelcomingScreen.CreateOrRecoverWalletFS.route)
                 }
             )
+            BackHandler {}
         }
         composable(route = WelcomingScreen.CreateOrRecoverWalletFS.route) {
             CreateOrRecoverWalletScreen(
