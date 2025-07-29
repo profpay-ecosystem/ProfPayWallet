@@ -52,7 +52,7 @@ interface TransactionsDao {
             (:isSender = 0 AND receiver_address = :address)
           )
           AND (
-            :isCentralAddress = 1 AND type = 4
+            :isCentralAddress = 0 OR type = 4
           )
         ORDER BY timestamp DESC
         """

@@ -547,7 +547,7 @@ fun WalletAddressScreen(
                                 openDialog = !openDialog
                             } else {
                                 sharedPref
-                                    .edit() {
+                                    .edit {
                                         putString(
                                             "address_for_receive",
                                             address
@@ -577,7 +577,7 @@ fun WalletAddressScreen(
                     AlertDialogWidget(
                         onConfirmation = {
                             sharedPref
-                                .edit() {
+                                .edit {
                                     putString("address_for_receive", address)
                                 }
                             goToReceive()
@@ -647,7 +647,7 @@ fun LazyListTransactionsFeature(
 
                             if (isForWA.first) {
                                 val currentAddress =
-                                    if (item.receiverAddress.equals(addressWa)) {
+                                    if (item.receiverAddress == addressWa) {
                                         item.senderAddress
                                     } else {
                                         item.receiverAddress
@@ -655,7 +655,7 @@ fun LazyListTransactionsFeature(
 
                                 CardHistoryTransactionsForWAFeature(
                                     onClick = {
-                                        sharedPref.edit() {
+                                        sharedPref.edit {
                                             putLong(
                                                 "transaction_id",
                                                 item.transactionId!!
@@ -680,7 +680,7 @@ fun LazyListTransactionsFeature(
 
                                 CardHistoryTransactionsFeature(
                                     onClick = {
-                                        sharedPref.edit() {
+                                        sharedPref.edit {
                                             putLong(
                                                 "transaction_id",
                                                 item.transactionId!!
@@ -730,25 +730,27 @@ fun CardHistoryTransactionsForWAFeature(
     onClick: () -> Unit = {},
 ) {
     val sharedPref = sharedPref()
+    val addressWa = sharedPref.getString("address_for_wa", "")
 
-    val label = when (typeTransaction) {
+    val transactionTitle = when (typeTransaction) {
         TransactionType.SEND.index -> "Отправлено"
         TransactionType.RECEIVE.index -> "Получено"
         TransactionType.BETWEEN_YOURSELF.index -> "Между своими"
-        else -> {
-            ""
-        }
+        else -> ""
     }
-    val label2 = when (typeTransaction) {
+
+    val transactionDetails = when (typeTransaction) {
         TransactionType.SEND.index -> "Куда: ${address.take(5)}...${address.takeLast(5)}"
         TransactionType.RECEIVE.index -> "Откуда: ${address.take(5)}...${address.takeLast(5)}"
-        TransactionType.BETWEEN_YOURSELF.index -> "Откуда: ${transactionEntity.senderAddress.take(5)}..." +
-                "${transactionEntity.senderAddress.takeLast(5)}\n" +
-                "Куда: ${transactionEntity.receiverAddress.take(5)}..." +
-                transactionEntity.receiverAddress.takeLast(5)
-
+        TransactionType.BETWEEN_YOURSELF.index -> buildString {
+            append("Откуда: ${transactionEntity.senderAddress.take(5)}...${transactionEntity.senderAddress.takeLast(5)}\n")
+            append("Куда: ${transactionEntity.receiverAddress.take(5)}...${transactionEntity.receiverAddress.takeLast(5)}")
+        }
         else -> return
     }
+
+    val betweenYourselfReceiver =
+        typeTransaction == TransactionType.BETWEEN_YOURSELF.index && transactionEntity.receiverAddress == addressWa
 
     Card(
         modifier = Modifier
@@ -785,10 +787,10 @@ fun CardHistoryTransactionsForWAFeature(
                         ) {}
                         Column(modifier = Modifier.padding(horizontal = 10.dp)) {
                             Text(
-                                text = label,
+                                text = transactionTitle,
                                 style = MaterialTheme.typography.bodyLarge
                             )
-                            Text(text = label2, style = MaterialTheme.typography.labelLarge)
+                            Text(text = transactionDetails, style = MaterialTheme.typography.labelLarge)
                         }
                     }
                 }
