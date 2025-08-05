@@ -14,7 +14,7 @@ import com.example.telegramWallet.ui.screens.createOrRecoveryWallet.SeedPhraseCo
 
 fun NavGraphBuilder.coRAddressFromWalletSystemNG(navController: NavHostController) {
     navigation(
-        route = Graph.CREATE_OR_RECOVERY_ADDRESS,
+        route = Graph.CreateOrRecoveryAddress.route,
         startDestination = WalletSystem.CoRAFromWS.route
     ) {
 
@@ -63,8 +63,8 @@ fun NavGraphBuilder.coRAddressFromWalletSystemNG(navController: NavHostControlle
         composable(route = SeedPhraseConfirmation.WalletAdded.route) {
             CreatedWalletAddingScreen(
                 goToHome = {
-                    navController.navigate(route = Graph.PROFILE) {
-                        popUpTo(route = Graph.PROFILE)
+                    navController.navigate(route = Graph.Profile.route) {
+                        popUpTo(route = Graph.Profile.route)
                     }
                 },
                 goToBack = {
@@ -75,8 +75,8 @@ fun NavGraphBuilder.coRAddressFromWalletSystemNG(navController: NavHostControlle
         composable(route = RecoverWallet.RecoveringWalletAdding.route) {
             RecoveringWalletAddingScreen(
                 goToHome = {
-                    navController.navigate(route = Graph.PROFILE) {
-                        popUpTo(route = Graph.PROFILE)
+                    navController.navigate(route = Graph.Profile.route) {
+                        popUpTo(route = Graph.Profile.route)
                     }
                 },
                 goToBack = {

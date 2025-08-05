@@ -65,6 +65,7 @@ class UsdtTransferScheduler(
                 },
                 address.addressEntity.address
             )
+            delay(1000)
 
             // Запрос к API на получение TRX транзакций.
             TrxTransactionsApi.trxTransactionsService.makeRequest(
@@ -89,6 +90,7 @@ class UsdtTransferScheduler(
                 },
                 address.addressEntity.address
             )
+            delay(1000)
 
             if (centralAddress != null) {
                 // Запрос к API на получение TRX транзакций.
@@ -113,7 +115,6 @@ class UsdtTransferScheduler(
                     centralAddress.address
                 )
             }
-            delay(2000)
         }
     }
 

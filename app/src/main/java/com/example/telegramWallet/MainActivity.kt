@@ -8,7 +8,6 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
@@ -32,6 +31,7 @@ import com.example.telegramWallet.bridge.view_model.pin_lock.PinLockViewModel
 import com.example.telegramWallet.bridge.view_model.settings.ThemeState
 import com.example.telegramWallet.bridge.view_model.settings.ThemeViewModel
 import com.example.telegramWallet.data.services.AppLockManager
+import com.example.telegramWallet.data.services.NetworkMonitor
 import com.example.telegramWallet.ui.app.navigation.MyApp
 import com.example.telegramWallet.ui.app.navigation.graphs.Graph
 import com.example.telegramWallet.ui.app.theme.WalletNavigationBottomBarTheme
@@ -43,6 +43,7 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : FragmentActivity(), Application.ActivityLifecycleCallbacks {
+    lateinit var networkMonitor: NetworkMonitor
     private var navController: NavHostController? = null
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<Intent>
     @Inject lateinit var appInitializer: AppInitializer
@@ -53,6 +54,14 @@ class MainActivity : FragmentActivity(), Application.ActivityLifecycleCallbacks 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Pushy.listen(this)
+
+        val sharedPrefs = this.getSharedPreferences(
+            ContextCompat.getString(this, R.string.preference_file_key),
+            MODE_PRIVATE
+        )
+
+        networkMonitor = NetworkMonitor(context = this, sharedPref = sharedPrefs)
+        networkMonitor.register()
 
         registerActivityLifecycleCallbacks(this)
         enableEdgeToEdge()
@@ -69,30 +78,25 @@ class MainActivity : FragmentActivity(), Application.ActivityLifecycleCallbacks 
             options.isEnableUserInteractionBreadcrumbs = true
         }
 
-        val sharedPrefs = this.getSharedPreferences(
-            ContextCompat.getString(this, R.string.preference_file_key),
-            MODE_PRIVATE
-        )
-
         lifecycleScope.launch { appInitializer.initialize(sharedPrefs, this@MainActivity) }
 
         // Инициализация ActivityResultLauncher
         requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             if (NotificationManagerCompat.from(this).areNotificationsEnabled()) {
                 setContent {
-                    MyAppContent(sharedPrefs)
+                    MyAppContent(sharedPrefs, networkMonitor)
                 }
             }
         }
 
         setContent {
-            MyAppContent(sharedPrefs)
+            MyAppContent(sharedPrefs, networkMonitor)
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.S)
     @Composable
-    private fun MyAppContent(sharedPrefs: SharedPreferences) {
+    private fun MyAppContent(sharedPrefs: SharedPreferences, networkMonitor: NetworkMonitor) {
         viewModel = hiltViewModel()
         navController = rememberNavController()
         val isDarkTheme: Boolean
@@ -108,18 +112,19 @@ class MainActivity : FragmentActivity(), Application.ActivityLifecycleCallbacks 
                     isSystemInDarkTheme
                 )
                 WalletNavigationBottomBarTheme(isDarkTheme = isDarkTheme) {
-                    MyApp(navController!!)
+                    MyApp(navController = navController!!, networkMonitor = networkMonitor)
                 }
             }
         }
     }
 
     // Проверка пин-кода при открытии вкладки приложения, дефолт-значение запускает страницу создания пин-кода
+    // TODO: вырезать, рефакторить
     @SuppressLint("RestrictedApi")
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onActivityResumed(activity: Activity) {
         if (!NotificationManagerCompat.from(this).areNotificationsEnabled() || navController == null
-            || navController!!.findDestination(Graph.HOME) == null
+            || navController!!.findDestination(Graph.Home.route) == null
         ) return
         val sharedPref = activity.getSharedPreferences(
             ContextCompat.getString(activity, R.string.preference_file_key),
@@ -131,18 +136,19 @@ class MainActivity : FragmentActivity(), Application.ActivityLifecycleCallbacks 
 
         if (!isBlockApp) {
             if (pinCode.equals("startInit")) {
-                if (navController?.currentBackStackEntry?.destination?.route != Graph.CREATE_LOCK_SCREEN ){
-                    navController!!.navigate(route = Graph.CREATE_LOCK_SCREEN)
+                if (navController?.currentBackStackEntry?.destination?.route != Graph.CreateLockScreen.route ){
+                    navController!!.navigate(route = Graph.CreateLockScreen.route)
                 }
             } else if (!sessionActivity) {
-                if (navController?.currentBackStackEntry?.destination?.route != Graph.LOCK_SCREEN ){
-                    navController!!.navigate(route = Graph.LOCK_SCREEN)
+                if (navController?.currentBackStackEntry?.destination?.route != Graph.LockScreen.route ){
+                    navController!!.navigate(route = Graph.LockScreen.route)
                 }
             }
         }
     }
 
     // При сворачивании приложения вызывает страницу блокировки с вводом пин-кода
+    // TODO: вырезать, рефакторить
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onActivityPaused(activity: Activity) {
         if (!NotificationManagerCompat.from(this).areNotificationsEnabled()) return

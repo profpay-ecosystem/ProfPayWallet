@@ -35,6 +35,5 @@ class BlockingAppViewModel @Inject constructor(private val blockingAppRepo: Bloc
 sealed interface BlockingAppState {
     data object Loading : BlockingAppState
     data class Success(val value: BlockingAppRepoState) : BlockingAppState
-
 }
 

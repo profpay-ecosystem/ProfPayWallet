@@ -17,8 +17,8 @@ import com.example.telegramWallet.ui.screens.SmartInDevelopment
 fun HomeNavGraph(navController: NavHostController) {
     NavHost(
         navController = navController,
-        route = Graph.HOME,
-        startDestination = Graph.PROFILE
+        route = Graph.Home.route,
+        startDestination = Graph.Profile.route
     ) {
 
         composable(route = BottomBarScreen.SmartContractList.route) {

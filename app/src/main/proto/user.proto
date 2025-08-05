@@ -14,6 +14,16 @@ service UserService {
   rpc UpdateUserDeviceToken(UpdateUserDeviceTokenRequest) returns (UserTelegramDataResponse);
   rpc RegisterUserDevice(RegisterUserDeviceRequest) returns (RegisterUserDeviceResponse);
   rpc IsUserExists(IsUserExistsRequest) returns (IsUserExistsResponse);
+  rpc SetUserLegalConsentsTrue(UserLegalConsentsRequest) returns (UserLegalConsentsResponse);
+}
+
+message UserLegalConsentsRequest {
+  uint64 user_id = 1;
+  string app_id = 2;
+}
+
+message UserLegalConsentsResponse {
+  google.protobuf.Timestamp timestamp = 1;
 }
 
 message IsUserExistsRequest {

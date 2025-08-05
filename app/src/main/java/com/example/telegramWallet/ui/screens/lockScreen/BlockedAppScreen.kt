@@ -1,5 +1,6 @@
 package com.example.telegramWallet.ui.screens.lockScreen
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,9 +29,7 @@ import com.example.telegramWallet.ui.shared.sharedPref
 
 @Composable
 fun BlockedAppScreen(toNavigate: () -> Unit, viewModel: BlockingAppViewModel = hiltViewModel()) {
-    val shared = sharedPref()
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val isEthDisable = shared.getBoolean("isEthDisable", false)
     Scaffold(
     ) {
         Surface(
@@ -43,15 +42,12 @@ fun BlockedAppScreen(toNavigate: () -> Unit, viewModel: BlockingAppViewModel = h
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                if (isEthDisable) {
-                    IsEthDisableBASFeature()
-                } else {
-                    Text(text = "Приложение было заблокировано!")
-                }
+                IsEthDisableBASFeature()
                 when (state) {
                     is BlockingAppState.Loading -> {}
                     is BlockingAppState.Success -> {
                         val resultState = (state as BlockingAppState.Success).value
+                        Log.e("isBlockedApp", resultState.isBlockedApp.toString())
                         if (!resultState.isBlockedApp) {
                             toNavigate()
                         }

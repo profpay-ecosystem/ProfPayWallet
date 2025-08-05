@@ -21,7 +21,7 @@ import com.example.telegramWallet.ui.screens.wallet.WalletSystemTRXScreen
 
 fun NavGraphBuilder.profileNavGraph(navController: NavController) {
     navigation(
-        route = Graph.PROFILE,
+        route = Graph.Profile.route,
         startDestination = BottomBarScreen.Profile.route
     ) {
         composable(BottomBarScreen.Profile.route) {
@@ -85,7 +85,7 @@ fun NavGraphBuilder.profileNavGraph(navController: NavController) {
             WalletSystemScreen(
                 goToBack = { navController.navigateUp() },
                 goToWalletInfo = { navController.navigate(route = BottomBarScreen.Profile.route) },
-                goToCoRA = { navController.navigate(route = Graph.CREATE_OR_RECOVERY_ADDRESS) }
+                goToCoRA = { navController.navigate(route = Graph.CreateOrRecoveryAddress.route) }
             )
         }
         composable(WalletSots.WalletArchivalSots.route) {

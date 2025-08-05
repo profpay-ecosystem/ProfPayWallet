@@ -1,8 +1,11 @@
 package com.example.telegramWallet.ui.screens.createOrRecoveryWallet
 
+import android.annotation.SuppressLint
+import android.content.Context
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -50,18 +53,34 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.core.content.edit
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.telegramWallet.R
+import com.example.telegramWallet.bridge.view_model.welcoming_screen.WelcomingViewModel
+import com.example.telegramWallet.ui.app.navigation.graphs.navGraph.OnboardingScreen
 import com.example.telegramWallet.ui.app.theme.BackgroundContainerButtonLight
 import com.example.telegramWallet.ui.app.theme.BackgroundDark
 import com.example.telegramWallet.ui.app.theme.BackgroundLight
+import com.example.telegramWallet.ui.shared.sharedPref
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
+@SuppressLint("SuspiciousIndentation")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WelcomingScreen(goToCOR: () -> Unit) {
+fun WelcomingScreen(firstStart: Boolean,
+                    toNavigate: (String) -> Unit,
+                    toNavigateUp: () -> Unit,
+                    viewModel: WelcomingViewModel = hiltViewModel()
+) {
+    val sharedPref = sharedPref()
 
     val text = "СОГЛАШЕНИЕ ДЛЯ ПОЛЬЗОВАТЕЛЕЙ " +
             "КРИПТОКОШЕЛЬКА \n\n" +
@@ -214,7 +233,10 @@ fun WelcomingScreen(goToCOR: () -> Unit) {
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { isChecked = !isChecked }
+                                    .clickable(
+                                        indication = null,
+                                        interactionSource = remember { MutableInteractionSource() }
+                                    ) { isChecked = !isChecked }
                                     .padding(top = 24.dp)
                             ) {
                                 Checkbox(
@@ -235,7 +257,21 @@ fun WelcomingScreen(goToCOR: () -> Unit) {
                             horizontalArrangement = Arrangement.End
                         ) {
                             Button(
-                                onClick = goToCOR,
+                                onClick = {
+                                    if (firstStart) {
+                                        toNavigate(OnboardingScreen.CreateOrRecoverWalletFS.route)
+                                    } else {
+                                        toNavigateUp()
+                                    }
+
+                                    viewModel.viewModelScope.launch(Dispatchers.IO) {
+                                        viewModel.setUserLegalConsentsTrue()
+                                    }
+
+                                    sharedPref.edit(commit = true) {
+                                        putBoolean("ACCEPTED_RULES", true)
+                                    }
+                                },
                                 enabled = isChecked,
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Color.White,

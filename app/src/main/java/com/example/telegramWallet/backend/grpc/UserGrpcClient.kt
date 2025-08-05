@@ -10,6 +10,19 @@ import org.example.protobuf.user.UserServiceGrpc
 class UserGrpcClient(private val channel: ManagedChannel) {
     private val stub: UserServiceGrpc.UserServiceBlockingStub = UserServiceGrpc.newBlockingStub(channel)
 
+    suspend fun setUserLegalConsentsTrue(appId: String): Result<UserProto.UserLegalConsentsResponse> = withContext(
+        Dispatchers.IO) {
+        try {
+            val request = UserProto.UserLegalConsentsRequest.newBuilder()
+                .setAppId(appId)
+                .build()
+            val response = stub.setUserLegalConsentsTrue(request)
+            Result.success(response)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun registerUser(appId: String, deviceToken: String): Result<UserProto.RegisterUserResponse> = withContext(Dispatchers.IO) {
         try {
             val request = UserProto.RegisterUserRequest.newBuilder()

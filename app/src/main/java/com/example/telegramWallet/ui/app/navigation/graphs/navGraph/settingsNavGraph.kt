@@ -15,7 +15,7 @@ import com.example.telegramWallet.ui.screens.lockScreen.LockScreen
 
 fun NavGraphBuilder.settingsNavGraph(navController: NavController) {
     navigation(
-        route = Graph.SETTINGS,
+        route = Graph.Settings.route,
         startDestination = BottomBarScreen.Settings.route
     ) {
         composable(route = BottomBarScreen.Settings.route) {

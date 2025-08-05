@@ -185,24 +185,34 @@ class AddressUtilities {
      * Данный метод используется для получения TRC20 USDT баланса
      */
     fun getUsdtBalance(accountAddr: String): BigInteger {
-        val wrapper = ApiWrapper("5.39.223.8:59151", "5.39.223.8:50061", KeyPair.generate().toPrivateKey())
+        try {
+            val wrapper = ApiWrapper("5.39.223.8:59151", "5.39.223.8:50061", KeyPair.generate().toPrivateKey())
 
-        val contract: Contract = wrapper.getContract("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t")
-        val token = Trc20Contract(contract, "TJJaVcRremausriMLkZeRedM95v7HW4j4D", wrapper)
-        val balance = token.balanceOf(accountAddr)
-        wrapper.close()
+            val contract: Contract = wrapper.getContract("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t")
+            val token = Trc20Contract(contract, "TJJaVcRremausriMLkZeRedM95v7HW4j4D", wrapper)
+            val balance = token.balanceOf(accountAddr)
+            wrapper.close()
 
-        return balance
+            return balance
+        } catch (e: Exception) {
+            Log.e("USDT_BALANCE", "Unexpected error: ${e.message}")
+            return BigInteger.ZERO
+        }
     }
 
     /**
      * Данный метод используется для получения TRX баланса
      */
     fun getTrxBalance(accountAddr: String): BigInteger {
-        val wrapper = ApiWrapper("5.39.223.8:59151", "5.39.223.8:50061", KeyPair.generate().toPrivateKey())
-        val balanceInSun: BigInteger = BigInteger.valueOf(wrapper.getAccountBalance(accountAddr))
-        wrapper.close()
-        return balanceInSun
+        try {
+            val wrapper = ApiWrapper("5.39.223.8:59151", "5.39.223.8:50061", KeyPair.generate().toPrivateKey())
+            val balanceInSun: BigInteger = BigInteger.valueOf(wrapper.getAccountBalance(accountAddr))
+            wrapper.close()
+            return balanceInSun
+        } catch (e: Exception) {
+            Log.e("TRX_BALANCE", "Unexpected error: ${e.message}")
+            return BigInteger.ZERO
+        }
     }
 
     private fun generateMasterPrivateKey(seed: ByteArray): DeterministicKey {

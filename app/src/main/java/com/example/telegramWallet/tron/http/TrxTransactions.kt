@@ -1,6 +1,5 @@
 package com.example.telegramWallet.tron.http
 
-import com.example.telegramWallet.BuildConfig
 import com.example.telegramWallet.tron.http.models.TrxTransactionDataResponse
 import com.example.telegramWallet.tron.http.models.TrxTransactionResponse
 import kotlinx.serialization.json.Json
@@ -48,7 +47,7 @@ class TrxTransactionsService {
 
                     try {
                         val obj = localJson
-                            .decodeFromString<TrxTransactionResponse>(response.body!!.string())
+                            .decodeFromString<TrxTransactionResponse>(response.body.string())
                         callback.onSuccess(obj.data)
                     } catch (e: Exception) {
                         callback.onFailure(e.toString())
