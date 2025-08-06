@@ -1,6 +1,5 @@
 package com.example.telegramWallet.tron.http
 
-import com.example.telegramWallet.BuildConfig
 import com.example.telegramWallet.tron.http.models.Trc20TransactionsDataResponse
 import com.example.telegramWallet.tron.http.models.Trc20TransactionsResponse
 import kotlinx.serialization.json.Json
@@ -12,12 +11,6 @@ import okhttp3.Request
 import okhttp3.Response
 import java.io.IOException
 import kotlin.coroutines.suspendCoroutine
-
-
-interface Trc20TransactionsRequestCallback {
-    fun onSuccess(data: List<Trc20TransactionsDataResponse>)
-    fun onFailure(error: String)
-}
 
 // API запрос для получения USDT TRC20 транзакций.
 class Trc20TransactionsService {

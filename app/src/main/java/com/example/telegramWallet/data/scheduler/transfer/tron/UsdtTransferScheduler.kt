@@ -1,6 +1,7 @@
 package com.example.telegramWallet.data.scheduler.transfer.tron
 
 import android.database.sqlite.SQLiteConstraintException
+import android.util.Log
 import com.example.telegramWallet.data.database.entities.wallet.TransactionEntity
 import com.example.telegramWallet.data.database.entities.wallet.TransactionType
 import com.example.telegramWallet.data.database.entities.wallet.assignTransactionType
@@ -72,7 +73,7 @@ class UsdtTransferScheduler(
             if (centralAddress != null) {
                 // Запрос к API на получение TRX транзакций.
                 try {
-                    val trxData = TrxTransactionsApi.trxTransactionsService.makeRequest(address.addressEntity.address)
+                    val trxData = TrxTransactionsApi.trxTransactionsService.makeRequest(centralAddress.address)
                     for (transaction in trxData) {
                         val contract = transaction.raw_data.contract[0]
                         if (contract.type == "TransferContract") {

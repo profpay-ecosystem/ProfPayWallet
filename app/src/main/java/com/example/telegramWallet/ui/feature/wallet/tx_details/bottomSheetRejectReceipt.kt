@@ -51,6 +51,7 @@ import com.example.telegramWallet.data.utils.toTokenAmount
 import com.example.telegramWallet.ui.app.theme.BackgroundContainerButtonLight
 import com.example.telegramWallet.ui.app.theme.GreenColor
 import com.example.telegramWallet.ui.app.theme.PubAddressDark
+import com.example.telegramWallet.ui.screens.wallet.ContentBottomSheetTransferProcessing
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -65,7 +66,6 @@ fun bottomSheetRejectReceipt(
     snackbar: StackedSnakbarHostState,
     tokenName: String
 ): Pair<Boolean, (Boolean) -> Unit> {
-    val coroutineScope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
         confirmValueChange = { true }
@@ -76,6 +76,8 @@ fun bottomSheetRejectReceipt(
     val keyboardController = LocalSoftwareKeyboardController.current
 
     val (isOpenSheet, setIsOpenSheet) = remember { mutableStateOf(false) }
+    val (isConfirmTransaction, setIsConfirmTransaction) = remember { mutableStateOf(false) }
+
     var valueAmount by remember { mutableStateOf("0.0") }
     val (commissionOnTransaction, setCommissionOnTransaction) = remember { mutableStateOf(BigDecimal.ZERO) }
     val commissionState by viewModel.stateCommission.collectAsStateWithLifecycle()
@@ -158,223 +160,228 @@ fun bottomSheetRejectReceipt(
             Column(
                 modifier = Modifier.fillMaxSize(),
             ) {
-                Row(
-                    modifier = Modifier.padding(top = 16.dp, start = 16.dp),
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Отправить",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-
-                Row(
-                    modifier = Modifier
-                        .padding(top = 8.dp, start = 16.dp, end = 16.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Card(
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier,
-                        elevation = CardDefaults.cardElevation(10.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        TextField(
-                            value = addressSending,
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            placeholder = { Text(text = "Введите адрес") },
-                            shape = MaterialTheme.shapes.small.copy(),
-                            onValueChange = {
-                                addressSending = it
-                            },
-                            trailingIcon = {
-                                Card(
-                                shape = RoundedCornerShape(5.dp),
-                                modifier = Modifier.padding(end = 8.dp),
-                                elevation = CardDefaults.cardElevation(7.dp),
-                                onClick = {
-                                    val clipData = clipboardManager.getText()
-                                    if (clipData != null) {
-                                        addressSending = clipData.toString()
-                                    }
-                                }
-                            ) {
-                                Text(
-                                    "Paste",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    modifier = Modifier.padding(
-                                        horizontal = 12.dp,
-                                        vertical = 8.dp
-                                    ),
-                                )
-                            }},
-                            colors = TextFieldDefaults.colors(
-                                focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                unfocusedTextColor = PubAddressDark,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                                disabledIndicatorColor = Color.Transparent,
-                                focusedContainerColor = Color.Transparent,
-                                unfocusedContainerColor = Color.Transparent,
-                                cursorColor = MaterialTheme.colorScheme.onBackground,
-                                selectionColors = TextSelectionColors(
-                                    handleColor = MaterialTheme.colorScheme.onBackground,
-                                    backgroundColor = Color.Transparent
-                                )
-                            )
-                        )
-                    }
-                }
-
-                Row(
-                    modifier = Modifier
-                        .padding(top = 8.dp, start = 16.dp, end = 16.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Card(
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier,
-                        elevation = CardDefaults.cardElevation(10.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        TextField(
-                            value = valueAmount,
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            placeholder = { Text(text = "Введите сумму") },
-                            shape = MaterialTheme.shapes.small.copy(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            onValueChange = {
-                                valueAmount = it
-                            },
-                            trailingIcon = {},
-                            colors = TextFieldDefaults.colors(
-                                focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                unfocusedTextColor = PubAddressDark,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                                disabledIndicatorColor = Color.Transparent,
-                                focusedContainerColor = Color.Transparent,
-                                unfocusedContainerColor = Color.Transparent,
-                                cursorColor = MaterialTheme.colorScheme.onBackground,
-                                selectionColors = TextSelectionColors(
-                                    handleColor = MaterialTheme.colorScheme.onBackground,
-                                    backgroundColor = Color.Transparent
-                                )
-                            )
-                        )
-                    }
-                }
-
-                Card(
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier
-                        .padding( vertical = 8.dp, horizontal = 16.dp,),
-                    elevation = CardDefaults.cardElevation(10.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
+                if (!isConfirmTransaction) {
                     Row(
-                        modifier = Modifier
-                            .padding(18.dp)
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.padding(top = 16.dp, start = 16.dp),
+                        horizontalArrangement = Arrangement.Start,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = "Комиссия:", fontWeight = FontWeight.SemiBold)
-                        Row {
-                            Text(text = "$commissionOnTransaction ")
-                            Text(text = "TRX", fontWeight = FontWeight.SemiBold)
-                        }
-                    }
-                }
-
-                Card(
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier
-                        .padding( horizontal = 16.dp,),
-                    elevation = CardDefaults.cardElevation(10.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .padding(vertical = 18.dp, horizontal = 16.dp)
-                            .fillMaxWidth(),
-                    ) {
                         Text(
-                            text = "Мы взымаем комиссию в TRX, которая рассчитывается исходя из количества полученных AML отчетов и числа оплаченных услуг, " +
-                                    "связанных с проверкой по AML. " +
-                                    "Размер комиссии напрямую зависит от объема предоставленных отчетов и оплаченных проверок на соответствие требованиям по борьбе с отмыванием денег (AML).",
-                            fontSize = 14.sp,
+                            text = "Отправить",
+                            fontSize = 20.sp,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
-                }
 
-                Button(
-                    enabled = isButtonEnabled,
-                    onClick = {
-                        if (viewModel.tron.addressUtilities.isValidTronAddress(addressSending)) {
-                            isButtonEnabled = false // Отключаем кнопку
-                            viewModel.viewModelScope.launch {
-                                val result = withContext(Dispatchers.IO) {
-                                    viewModel.rejectTransaction(
-                                        toAddress = addressSending,
-                                        addressWithTokens = addressWithTokens,
-                                        amount = valueAmount.toBigDecimal().toSunAmount(),
-                                        commission = commissionOnTransaction.toSunAmount(),
-                                        tokenName = tokenName,
-                                        tokenEntity = tokenEntity
+                    Row(
+                        modifier = Modifier
+                            .padding(top = 8.dp, start = 16.dp, end = 16.dp)
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Start,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Card(
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier,
+                            elevation = CardDefaults.cardElevation(10.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            TextField(
+                                value = addressSending,
+                                modifier = Modifier
+                                    .fillMaxWidth(),
+                                placeholder = { Text(text = "Введите адрес") },
+                                shape = MaterialTheme.shapes.small.copy(),
+                                onValueChange = {
+                                    addressSending = it
+                                },
+                                trailingIcon = {
+                                    Card(
+                                        shape = RoundedCornerShape(5.dp),
+                                        modifier = Modifier.padding(end = 8.dp),
+                                        elevation = CardDefaults.cardElevation(7.dp),
+                                        onClick = {
+                                            val clipData = clipboardManager.getText()
+                                            if (clipData != null) {
+                                                addressSending = clipData.toString()
+                                            }
+                                        }
+                                    ) {
+                                        Text(
+                                            "Paste",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            modifier = Modifier.padding(
+                                                horizontal = 12.dp,
+                                                vertical = 8.dp
+                                            ),
+                                        )
+                                    }},
+                                colors = TextFieldDefaults.colors(
+                                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                    unfocusedTextColor = PubAddressDark,
+                                    focusedIndicatorColor = Color.Transparent,
+                                    unfocusedIndicatorColor = Color.Transparent,
+                                    disabledIndicatorColor = Color.Transparent,
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedContainerColor = Color.Transparent,
+                                    cursorColor = MaterialTheme.colorScheme.onBackground,
+                                    selectionColors = TextSelectionColors(
+                                        handleColor = MaterialTheme.colorScheme.onBackground,
+                                        backgroundColor = Color.Transparent
                                     )
-                                }
+                                )
+                            )
+                        }
+                    }
 
-                                when (result) {
-                                    is TransferResult.Success -> snackbar.showSuccessSnackbar(
-                                        "Успешное действие",
-                                        "Успешно отправлено ${valueAmount.toBigInteger().toTokenAmount()} $tokenName",
-                                        "Закрыть",
+                    Row(
+                        modifier = Modifier
+                            .padding(top = 8.dp, start = 16.dp, end = 16.dp)
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Start,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Card(
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier,
+                            elevation = CardDefaults.cardElevation(10.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            TextField(
+                                value = valueAmount,
+                                modifier = Modifier
+                                    .fillMaxWidth(),
+                                placeholder = { Text(text = "Введите сумму") },
+                                shape = MaterialTheme.shapes.small.copy(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                onValueChange = {
+                                    valueAmount = it
+                                },
+                                trailingIcon = {},
+                                colors = TextFieldDefaults.colors(
+                                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                    unfocusedTextColor = PubAddressDark,
+                                    focusedIndicatorColor = Color.Transparent,
+                                    unfocusedIndicatorColor = Color.Transparent,
+                                    disabledIndicatorColor = Color.Transparent,
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedContainerColor = Color.Transparent,
+                                    cursorColor = MaterialTheme.colorScheme.onBackground,
+                                    selectionColors = TextSelectionColors(
+                                        handleColor = MaterialTheme.colorScheme.onBackground,
+                                        backgroundColor = Color.Transparent
                                     )
-                                    is TransferResult.Failure -> snackbar.showErrorSnackbar(
-                                        "Перевод валюты невозможен",
-                                        result.error.message,
-                                        "Закрыть",
-                                    )
-                                }
+                                )
+                            )
+                        }
+                    }
 
-                                setIsOpenSheet(false)
-                                isButtonEnabled = true
+                    Card(
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .padding( vertical = 8.dp, horizontal = 16.dp,),
+                        elevation = CardDefaults.cardElevation(10.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .padding(18.dp)
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = "Комиссия:", fontWeight = FontWeight.SemiBold)
+                            Row {
+                                Text(text = "$commissionOnTransaction ")
+                                Text(text = "TRX", fontWeight = FontWeight.SemiBold)
                             }
                         }
-                    },
-                    modifier = Modifier
-                        .padding(vertical = 24.dp, horizontal = 16.dp)
-                        .fillMaxWidth()
-                        .height(50.dp), colors = ButtonDefaults.buttonColors(
-                        containerColor = GreenColor,
-                        contentColor = BackgroundContainerButtonLight
-                    ), shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(
-                        text = "Отправить",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
+                    }
 
+                    Card(
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .padding( horizontal = 16.dp,),
+                        elevation = CardDefaults.cardElevation(10.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .padding(vertical = 18.dp, horizontal = 16.dp)
+                                .fillMaxWidth(),
+                        ) {
+                            Text(
+                                text = "Мы взымаем комиссию в TRX, которая рассчитывается исходя из количества полученных AML отчетов и числа оплаченных услуг, " +
+                                        "связанных с проверкой по AML. " +
+                                        "Размер комиссии напрямую зависит от объема предоставленных отчетов и оплаченных проверок на соответствие требованиям по борьбе с отмыванием денег (AML).",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+
+                    Button(
+                        enabled = isButtonEnabled,
+                        onClick = {
+                            if (viewModel.tron.addressUtilities.isValidTronAddress(addressSending)) {
+                                isButtonEnabled = false // Отключаем кнопку
+                                viewModel.viewModelScope.launch {
+                                    val result = withContext(Dispatchers.IO) {
+                                        viewModel.rejectTransaction(
+                                            toAddress = addressSending,
+                                            addressWithTokens = addressWithTokens,
+                                            amount = valueAmount.toBigDecimal().toSunAmount(),
+                                            commission = commissionOnTransaction.toSunAmount(),
+                                            tokenName = tokenName,
+                                            tokenEntity = tokenEntity
+                                        )
+                                    }
+
+                                    when (result) {
+                                        is TransferResult.Success -> snackbar.showSuccessSnackbar(
+                                            "Успешное действие",
+                                            "Успешно отправлено ${valueAmount.toBigInteger().toTokenAmount()} $tokenName",
+                                            "Закрыть",
+                                        )
+                                        is TransferResult.Failure -> snackbar.showErrorSnackbar(
+                                            "Перевод валюты невозможен",
+                                            result.error.message,
+                                            "Закрыть",
+                                        )
+                                    }
+
+                                    setIsOpenSheet(false)
+                                    isButtonEnabled = true
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .padding(vertical = 24.dp, horizontal = 16.dp)
+                            .fillMaxWidth()
+                            .height(50.dp), colors = ButtonDefaults.buttonColors(
+                            containerColor = GreenColor,
+                            contentColor = BackgroundContainerButtonLight
+                        ), shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(
+                            text = "Отправить",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                } else {
+                    ContentBottomSheetTransferProcessing(onClick = {
+
+                    })
+                }
             }
         }
     }

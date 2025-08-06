@@ -43,6 +43,7 @@ import com.example.telegramWallet.data.utils.toSunAmount
 import com.example.telegramWallet.data.utils.toTokenAmount
 import com.example.telegramWallet.ui.app.theme.BackgroundContainerButtonLight
 import com.example.telegramWallet.ui.app.theme.GreenColor
+import com.example.telegramWallet.ui.screens.wallet.ContentBottomSheetTransferProcessing
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -59,13 +60,14 @@ fun bottomSheetTransOnGeneralReceipt(
     tokenName: String,
     walletId: Long
 ): Pair<Boolean, (Boolean) -> Unit> {
-    val coroutineScope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true,
         confirmValueChange = { true }
     )
 
     val (isOpenSheet, setIsOpenSheet) = remember { mutableStateOf(false) }
+    val (isConfirmTransaction, setIsConfirmTransaction) = remember { mutableStateOf(false) }
+
     var isButtonEnabled by remember { mutableStateOf(false) }
     val commissionState by viewModel.stateCommission.collectAsStateWithLifecycle()
 
@@ -128,10 +130,7 @@ fun bottomSheetTransOnGeneralReceipt(
                     isButtonEnabled = true
                     setCommissionOnTransaction(commission.toBigDecimal())
                 }
-                is EstimateCommissionResult.Error -> {
-                    val commission = (commissionState as EstimateCommissionResult.Error)
-                    println(commission.throwable.message)
-                }
+                is EstimateCommissionResult.Error -> {}
                 is EstimateCommissionResult.Empty -> {}
             }
         }
@@ -148,47 +147,23 @@ fun bottomSheetTransOnGeneralReceipt(
             Column(
                 modifier = Modifier.fillMaxSize(),
             ) {
-                Row(
-                    modifier = Modifier.padding(top = 16.dp, start = 16.dp, bottom = 16.dp),
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Перевод на Главный",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-
-                Card(
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier
-                        .padding( vertical = 8.dp, horizontal = 16.dp,),
-                    elevation = CardDefaults.cardElevation(10.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
+                if (!isConfirmTransaction) {
                     Row(
-                        modifier = Modifier
-                            .padding(18.dp)
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.padding(top = 16.dp, start = 16.dp, bottom = 16.dp),
+                        horizontalArrangement = Arrangement.Start,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = "Комиссия:", fontWeight = FontWeight.SemiBold)
-                        Row {
-                            Text(text = "$commissionOnTransaction ")
-                            Text(text = "TRX", fontWeight = FontWeight.SemiBold)
-                        }
+                        Text(
+                            text = "Перевод на Главный",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
-                }
 
-                if (isGeneralAddressNotActivatedVisible) {
                     Card(
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier
-                            .padding(vertical = 8.dp, horizontal = 16.dp),
+                            .padding( vertical = 8.dp, horizontal = 16.dp,),
                         elevation = CardDefaults.cardElevation(10.dp),
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.primary
@@ -201,87 +176,117 @@ fun bottomSheetTransOnGeneralReceipt(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(text = "Активация адреса:", fontWeight = FontWeight.SemiBold, color = Color.Red)
+                            Text(text = "Комиссия:", fontWeight = FontWeight.SemiBold)
                             Row {
-                                Text(text = "${generalAddressActivatedCommission.toTokenAmount()} ")
+                                Text(text = "$commissionOnTransaction ")
                                 Text(text = "TRX", fontWeight = FontWeight.SemiBold)
                             }
                         }
                     }
-                }
 
-                Card(
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier
-                        .padding( horizontal = 16.dp,),
-                    elevation = CardDefaults.cardElevation(10.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    Row(
+                    if (isGeneralAddressNotActivatedVisible) {
+                        Card(
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier
+                                .padding(vertical = 8.dp, horizontal = 16.dp),
+                            elevation = CardDefaults.cardElevation(10.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .padding(18.dp)
+                                    .fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(text = "Активация адреса:", fontWeight = FontWeight.SemiBold, color = Color.Red)
+                                Row {
+                                    Text(text = "${generalAddressActivatedCommission.toTokenAmount()} ")
+                                    Text(text = "TRX", fontWeight = FontWeight.SemiBold)
+                                }
+                            }
+                        }
+                    }
+
+                    Card(
+                        shape = RoundedCornerShape(10.dp),
                         modifier = Modifier
-                            .padding(vertical = 18.dp, horizontal = 16.dp)
-                            .fillMaxWidth(),
+                            .padding( horizontal = 16.dp,),
+                        elevation = CardDefaults.cardElevation(10.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .padding(vertical = 18.dp, horizontal = 16.dp)
+                                .fillMaxWidth(),
+                        ) {
+                            Text(
+                                text = "Мы списываем комиссию в TRX, которая рассчитывается исходя из количества полученных AML отчетов и числа оплаченных услуг, " +
+                                        "связанных с проверкой по AML. " +
+                                        "Размер комиссии напрямую зависит от объема предоставленных отчетов и оплаченных проверок на соответствие требованиям по борьбе с отмыванием денег (AML).",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+
+                    Button(
+                        enabled = isButtonEnabled,
+                        onClick = {
+                            isButtonEnabled = false // Отключаем кнопку
+                            setIsConfirmTransaction(true)
+                            viewModel.viewModelScope.launch {
+                                val result = withContext(Dispatchers.IO) {
+                                    viewModel.acceptTransaction(
+                                        addressWithTokens = addressWithTokens,
+                                        commission = commissionOnTransaction.toSunAmount(),
+                                        walletId = walletId,
+                                        tokenName = tokenName,
+                                        tokenEntity = tokenEntity
+                                    )
+                                }
+
+                                when (result) {
+                                    is TransferResult.Success -> snackbar.showSuccessSnackbar(
+                                        "Успешное действие",
+                                        "Успешный перевод средств.",
+                                        "Закрыть",
+                                    )
+                                    is TransferResult.Failure -> snackbar.showErrorSnackbar(
+                                        "Перевод валюты невозможен",
+                                        result.error.message,
+                                        "Закрыть",
+                                    )
+                                }
+
+                                setIsOpenSheet(false)
+                                isButtonEnabled = true
+                                setIsConfirmTransaction(false)
+                            }
+                        },
+                        modifier = Modifier
+                            .padding(vertical = 24.dp, horizontal = 16.dp)
+                            .fillMaxWidth()
+                            .height(50.dp), colors = ButtonDefaults.buttonColors(
+                            containerColor = GreenColor,
+                            contentColor = BackgroundContainerButtonLight
+                        ), shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
-                            text = "Мы списываем комиссию в TRX, которая рассчитывается исходя из количества полученных AML отчетов и числа оплаченных услуг, " +
-                                    "связанных с проверкой по AML. " +
-                                    "Размер комиссии напрямую зависит от объема предоставленных отчетов и оплаченных проверок на соответствие требованиям по борьбе с отмыванием денег (AML).",
-                            fontSize = 14.sp,
+                            text = "Подтвердить",
+                            fontSize = 20.sp,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
+                } else {
+                    ContentBottomSheetTransferProcessing(onClick = {
+
+                    })
                 }
-
-                Button(
-                    enabled = isButtonEnabled,
-                    onClick = {
-                        isButtonEnabled = false // Отключаем кнопку
-                        viewModel.viewModelScope.launch {
-                            val result = withContext(Dispatchers.IO) {
-                                viewModel.acceptTransaction(
-                                    addressWithTokens = addressWithTokens,
-                                    commission = commissionOnTransaction.toSunAmount(),
-                                    walletId = walletId,
-                                    tokenName = tokenName,
-                                    tokenEntity = tokenEntity
-                                )
-                            }
-
-                            when (result) {
-                                is TransferResult.Success -> snackbar.showSuccessSnackbar(
-                                    "Успешное действие",
-                                    "Успешный перевод средств.",
-                                    "Закрыть",
-                                )
-                                is TransferResult.Failure -> snackbar.showErrorSnackbar(
-                                    "Перевод валюты невозможен",
-                                    result.error.message,
-                                    "Закрыть",
-                                )
-                            }
-
-                            setIsOpenSheet(false)
-                            isButtonEnabled = true
-                        }
-
-                    },
-                    modifier = Modifier
-                        .padding(vertical = 24.dp, horizontal = 16.dp)
-                        .fillMaxWidth()
-                        .height(50.dp), colors = ButtonDefaults.buttonColors(
-                        containerColor = GreenColor,
-                        contentColor = BackgroundContainerButtonLight
-                    ), shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(
-                        text = "Подтвердить",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-
             }
         }
     }
