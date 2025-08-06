@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package proto;
+
+option java_package = "org.server.protobuf.auth";
+option java_outer_classname = "AuthProto";
+
+service AuthService {
+  rpc IssueTokens(IssueTokensRequest) returns (IssueTokensResponse);
+  rpc RefreshTokenPair(RefreshTokenPairRequest) returns (RefreshTokenPairResponse);
+}
+
+message IssueTokensRequest {
+  uint64 user_id = 1;
+  string app_id = 2;
+  string device_token = 3;
+}
+
+message IssueTokensResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  google.protobuf.Timestamp timestamp = 3;
+}
+
+message RefreshTokenPairRequest {
+  uint64 user_id = 1;
+  string device_token = 2;
+  string refresh_token = 3;
+}
+
+message RefreshTokenPairResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  google.protobuf.Timestamp timestamp = 3;
+}

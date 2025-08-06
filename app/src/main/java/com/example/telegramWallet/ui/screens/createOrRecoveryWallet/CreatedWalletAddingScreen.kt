@@ -128,7 +128,8 @@ fun CreatedWalletAddingWidget(
 
                         if (isFirstStarted) {
                             viewModel.registerUserAccount(
-                                deviceToken = deviceToken
+                                deviceToken = deviceToken,
+                                sharedPref = sharedPref
                             )
                             sharedPref.edit(commit = true) { putBoolean("FIRST_STARTED", false) }
                         }

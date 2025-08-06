@@ -60,7 +60,7 @@ class AppInitializer @Inject constructor(
         if (firstStarted) {
             withContext(Dispatchers.IO) {
                 val deviceToken = Pushy.register(context)
-                sharedPrefs.edit() { putString("device_token", deviceToken) }
+                sharedPrefs.edit { putString("device_token", deviceToken) }
             }
 //            sharedPrefs.edit() { putBoolean("is_blocked_app", false) }
 //            sharedPrefs.edit() { putBoolean("isEthDisable", false) }
@@ -86,6 +86,11 @@ class AppInitializer @Inject constructor(
                                 onSuccess = { response ->
                                     profileRepo.updateUserId(response.userId)
                                     profileRepo.updateDeviceToken(deviceCredentials.token)
+
+                                    sharedPrefs.edit(commit = true) {
+                                        putString("access_token", response.accessToken)
+                                        putString("refresh_token", response.refreshToken)
+                                    }
 
                                     userGrpcClient.registerUserDevice(
                                         userId = response.userId,

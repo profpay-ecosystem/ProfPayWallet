@@ -43,6 +43,8 @@ message RegisterUserDeviceRequest {
 message RegisterUserDeviceResponse {
   google.protobuf.Timestamp timestamp = 1;
   bool successful = 2;
+  string access_token = 3;
+  string refresh_token = 4;
 }
 
 message UpdateUserDeviceTokenRequest {
@@ -58,6 +60,8 @@ message RegisterUserRequest {
 message RegisterUserResponse {
   google.protobuf.Timestamp timestamp = 1;
   int64 user_id = 2;
+  string access_token = 3;
+  string refresh_token = 4;
 }
 
 message UpdateUserTelegramRequest {

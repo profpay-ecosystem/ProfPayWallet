@@ -23,25 +23,29 @@ class WelcomingViewModel @Inject constructor(
     )
 
     suspend fun setUserLegalConsentsTrue() {
-        val appId = profileRepo.getProfileAppId()
-        return withContext(Dispatchers.IO) {
-            try {
-                val result = userGrpcClient.setUserLegalConsentsTrue(appId)
-                result.fold(
-                    onSuccess = { response ->
-                        true
-                    },
-                    onFailure = { exception ->
-                        Sentry.captureException(exception)
-                        Log.e("gRPC ERROR", "Error during gRPC call: ${exception.message}")
-                        false
-                    }
-                )
-            } catch (e: Exception) {
-                Sentry.captureException(e)
-                Log.e("gRPC ERROR", "Error during gRPC call: ${e.message}")
-                false
+        try {
+            val appId = profileRepo.getProfileAppId()
+            return withContext(Dispatchers.IO) {
+                try {
+                    val result = userGrpcClient.setUserLegalConsentsTrue(appId)
+                    result.fold(
+                        onSuccess = { response ->
+                            true
+                        },
+                        onFailure = { exception ->
+                            Sentry.captureException(exception)
+                            Log.e("gRPC ERROR", "Error during gRPC call: ${exception.message}")
+                            false
+                        }
+                    )
+                } catch (e: Exception) {
+                    Sentry.captureException(e)
+                    Log.e("gRPC ERROR", "Error during gRPC call: ${e.message}")
+                    false
+                }
             }
+        } catch (e: Exception) {
+            return
         }
     }
 }

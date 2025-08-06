@@ -40,7 +40,7 @@ fun RootNavigationGraph(navController: NavHostController, networkMonitor: Networ
         composable(route = Graph.CreateLockScreen.route) {
             CreateLockScreen(
                 toNavigate = {
-                    navController.navigate(route = Graph.WelcomingScreen)
+                    navController.navigate(route = Graph.WelcomingScreen.createRoute(firstStart = true))
                 }
             )
             BackHandler {}

@@ -109,7 +109,7 @@ class WalletAddressRepoImpl @Inject constructor(
                 transaction = transaction,
                 commission = commission,
                 network = network,
-                token = token,
+                transferToken = token,
                 txId = txId
             )
             result.fold(

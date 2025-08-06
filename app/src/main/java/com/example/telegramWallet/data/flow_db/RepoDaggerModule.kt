@@ -10,9 +10,9 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object GrpcModule {
-    @Provides
-    @Singleton
-    fun provideGrpcClientFactory(): GrpcClientFactory {
-        return GrpcClientFactory()
-    }
+//    @Provides
+//    @Singleton
+//    fun provideGrpcClientFactory(): GrpcClientFactory {
+//        return GrpcClientFactory()
+//    }
 }

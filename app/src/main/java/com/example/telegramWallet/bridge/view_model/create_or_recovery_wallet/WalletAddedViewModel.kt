@@ -1,6 +1,8 @@
 package com.example.telegramWallet.bridge.view_model.create_or_recovery_wallet
 
+import android.content.SharedPreferences
 import android.util.Log
+import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import com.example.telegramWallet.backend.grpc.CryptoAddressGrpcClient
 import com.example.telegramWallet.backend.grpc.GrpcClientFactory
@@ -15,6 +17,7 @@ import com.example.telegramWallet.data.database.repositories.wallet.AddressRepo
 import com.example.telegramWallet.data.database.repositories.wallet.TokenRepo
 import com.example.telegramWallet.data.database.repositories.wallet.WalletProfileRepo
 import com.example.telegramWallet.tron.AddressesWithKeysForM
+import com.example.telegramWallet.ui.shared.sharedPref
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.sentry.Sentry
 import kotlinx.coroutines.Dispatchers
@@ -107,7 +110,7 @@ class WalletAddedViewModel @Inject constructor(
         }
     }
 
-    suspend fun registerUserAccount(deviceToken: String): Boolean {
+    suspend fun registerUserAccount(deviceToken: String, sharedPref: SharedPreferences): Boolean {
         return withContext(Dispatchers.IO) {
             try {
                 val uuidString = java.util.UUID.randomUUID().toString()
@@ -119,6 +122,10 @@ class WalletAddedViewModel @Inject constructor(
                             appId = uuidString,
                             deviceToken = deviceToken
                         ))
+                        sharedPref.edit(commit = true) {
+                            putString("access_token", response.accessToken)
+                            putString("refresh_token", response.refreshToken)
+                        }
                         true
                     },
                     onFailure = { exception ->
@@ -135,7 +142,7 @@ class WalletAddedViewModel @Inject constructor(
         }
     }
 
-    suspend fun registerUserDevice(userId: Long, deviceToken: String) {
+    suspend fun registerUserDevice(userId: Long, deviceToken: String, sharedPref: SharedPreferences) {
         return withContext(Dispatchers.IO) {
             try {
                 val uuidString = java.util.UUID.randomUUID().toString()
@@ -147,6 +154,10 @@ class WalletAddedViewModel @Inject constructor(
                             appId = uuidString,
                             deviceToken = deviceToken
                         ))
+                        sharedPref.edit(commit = true) {
+                            putString("access_token", response.accessToken)
+                            putString("refresh_token", response.refreshToken)
+                        }
                         true
                     },
                     onFailure = { exception ->

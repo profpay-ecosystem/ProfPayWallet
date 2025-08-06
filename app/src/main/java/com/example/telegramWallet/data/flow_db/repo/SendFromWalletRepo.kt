@@ -53,7 +53,7 @@ class SendFromWalletRepoImpl @Inject constructor(private val profileRepo: Profil
                 transaction = transaction,
                 commission = commission,
                 network = network,
-                token = token,
+                transferToken = token,
                 txId = txId
             )
             result.fold(

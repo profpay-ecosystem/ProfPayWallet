@@ -1,9 +1,6 @@
 package com.example.telegramWallet.data.scheduler.transfer.tron
 
 import android.database.sqlite.SQLiteConstraintException
-import android.os.Build
-import android.util.Log
-import androidx.annotation.RequiresApi
 import com.example.telegramWallet.data.database.entities.wallet.TransactionEntity
 import com.example.telegramWallet.data.database.entities.wallet.TransactionType
 import com.example.telegramWallet.data.database.entities.wallet.assignTransactionType
@@ -16,9 +13,7 @@ import com.example.telegramWallet.data.database.repositories.wallet.TokenRepo
 import com.example.telegramWallet.data.utils.toTokenAmount
 import com.example.telegramWallet.tron.Tron
 import com.example.telegramWallet.tron.http.Trc20TransactionsApi
-import com.example.telegramWallet.tron.http.Trc20TransactionsRequestCallback
 import com.example.telegramWallet.tron.http.TrxTransactionsApi
-import com.example.telegramWallet.tron.http.TrxTransactionsRequestCallback
 import com.example.telegramWallet.tron.http.models.Trc20TransactionsDataResponse
 import com.example.telegramWallet.tron.http.models.TrxTransactionDataResponse
 import io.sentry.Sentry
@@ -27,7 +22,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.math.BigInteger
 
@@ -46,79 +40,54 @@ class UsdtTransferScheduler(
         val centralAddress = centralAddressRepo.getCentralAddress()
         for (address in addressList) {
             // Запрос к API на получение TRC20 транзакций.
-            Trc20TransactionsApi.trc20TransactionsService.makeRequest(
-                object : Trc20TransactionsRequestCallback {
-                    @RequiresApi(Build.VERSION_CODES.S)
-                    override fun onSuccess(data: List<Trc20TransactionsDataResponse>) {
-                        runBlocking {
-                            for (transaction in data) {
-                                if (transaction.type == "Transfer") {
-                                    transferUsdt(transaction, "USDT", address.addressEntity.address)
-                                }
-                            }
-                        }
+            try {
+                val trc20Data = Trc20TransactionsApi.trc20TransactionsService.makeRequest(address.addressEntity.address)
+                for (transaction in trc20Data) {
+                    if (transaction.type == "Transfer") {
+                        transferUsdt(transaction, "USDT", address.addressEntity.address)
                     }
+                }
+            } catch (e: Exception) {
+                Sentry.captureException(e)
+            }
 
-                    override fun onFailure(error: String) {
-                        Sentry.captureException(Exception(error))
-                    }
-                },
-                address.addressEntity.address
-            )
-            delay(1000)
+            delay(1500)
 
-            // Запрос к API на получение TRX транзакций.
-            TrxTransactionsApi.trxTransactionsService.makeRequest(
-                object : TrxTransactionsRequestCallback {
-                    @RequiresApi(Build.VERSION_CODES.S)
-                    override fun onSuccess(data: List<TrxTransactionDataResponse>) {
-                        runBlocking {
-                            for (transaction in data) {
-                                val contract = transaction.raw_data.contract[0]
-                                if (contract.type == "TransferContract") {
-                                    transferTrx(transaction, "TRX", address.addressEntity.address)
-                                } else if (contract.type == "TriggerSmartContract") {
-                                    triggerSmartContract(transaction, "TRX", address.addressEntity.address)
-                                }
-                            }
-                        }
+            try {
+                val trxData = TrxTransactionsApi.trxTransactionsService.makeRequest(address.addressEntity.address)
+                for (transaction in trxData) {
+                    val contract = transaction.raw_data.contract[0]
+                    if (contract.type == "TransferContract") {
+                        transferTrx(transaction, "TRX", address.addressEntity.address)
+                    } else if (contract.type == "TriggerSmartContract") {
+                        triggerSmartContract(transaction, "TRX", address.addressEntity.address)
                     }
+                }
+            } catch (e: Exception) {
+                Sentry.captureException(e)
+            }
 
-                    override fun onFailure(error: String) {
-                        Sentry.captureException(Exception(error))
-                    }
-                },
-                address.addressEntity.address
-            )
-            delay(1000)
+            delay(1500)
 
             if (centralAddress != null) {
                 // Запрос к API на получение TRX транзакций.
-                TrxTransactionsApi.trxTransactionsService.makeRequest(
-                    object : TrxTransactionsRequestCallback {
-                        @RequiresApi(Build.VERSION_CODES.S)
-                        override fun onSuccess(data: List<TrxTransactionDataResponse>) {
-                            runBlocking {
-                                for (transaction in data) {
-                                    val contract = transaction.raw_data.contract[0]
-                                    if (contract.type == "TransferContract") {
-                                        transferCentralTrx(centralAddress.address, transaction, "TRX")
-                                    }
-                                }
-                            }
+                try {
+                    val trxData = TrxTransactionsApi.trxTransactionsService.makeRequest(address.addressEntity.address)
+                    for (transaction in trxData) {
+                        val contract = transaction.raw_data.contract[0]
+                        if (contract.type == "TransferContract") {
+                            transferCentralTrx(centralAddress.address, transaction, "TRX")
                         }
-
-                        override fun onFailure(error: String) {
-                            Sentry.captureException(Exception(error))
-                        }
-                    },
-                    centralAddress.address
-                )
+                    }
+                } catch (e: Exception) {
+                    Sentry.captureException(e)
+                }
             }
+
+            delay(1500)
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.S)
     suspend fun transferUsdt(transaction: Trc20TransactionsDataResponse, tokenName: String, address: String) = coroutineScope {
         if (transaction.type != "Transfer") return@coroutineScope
 
@@ -149,7 +118,7 @@ class UsdtTransferScheduler(
                     type = assignTransactionType(idSend = senderAddressEntity?.addressId, idReceive = receiverAddressEntity?.addressId)
                 )
             )
-        } catch (e: SQLiteConstraintException) {
+        } catch (_: SQLiteConstraintException) {
             return@coroutineScope
         }
 
@@ -175,7 +144,6 @@ class UsdtTransferScheduler(
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.S)
     suspend fun transferTrx(transaction: TrxTransactionDataResponse, tokenName: String, address: String) = coroutineScope {
         if (transactionsRepo.transactionExistsViaTxid(transaction.txID) > 2) return@coroutineScope
         val contract = transaction.raw_data.contract[0]
@@ -224,7 +192,7 @@ class UsdtTransferScheduler(
                     type = typeValue
                 )
             )
-        } catch (e: SQLiteConstraintException) {
+        } catch (_: SQLiteConstraintException) {
             return@coroutineScope
         }
 
@@ -252,7 +220,6 @@ class UsdtTransferScheduler(
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.S)
     suspend fun triggerSmartContract(transaction: TrxTransactionDataResponse, tokenName: String, address: String) = coroutineScope {
         if (transactionsRepo.transactionExistsViaTxid(transaction.txID) > 2) return@coroutineScope
         val contract = transaction.raw_data.contract[0]
@@ -284,7 +251,7 @@ class UsdtTransferScheduler(
                     type = TransactionType.TRIGGER_SMART_CONTRACT.index
                 )
             )
-        } catch (e: SQLiteConstraintException) {
+        } catch (_: SQLiteConstraintException) {
             return@coroutineScope
         }
 
@@ -292,7 +259,6 @@ class UsdtTransferScheduler(
         tokenRepo.updateTronBalanceViaId(balance, senderAddressEntity.addressId!!, tokenName)
     }
 
-    @RequiresApi(Build.VERSION_CODES.S)
     suspend fun transferCentralTrx(address: String, transaction: TrxTransactionDataResponse, tokenName: String) = coroutineScope {
         if (transactionsRepo.transactionExistsViaTxid(transaction.txID) == 1) return@coroutineScope
         val contract = transaction.raw_data.contract[0]
@@ -331,7 +297,7 @@ class UsdtTransferScheduler(
                     type = assignTransactionType(idSend = senderAddressId, idReceive = receiverAddressId, isCentralAddress = true)
                 )
             )
-        } catch (e: SQLiteConstraintException) {
+        } catch (_: SQLiteConstraintException) {
             return@coroutineScope
         }
 

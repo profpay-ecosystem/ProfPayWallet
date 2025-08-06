@@ -149,15 +149,16 @@ fun RecoveringWalletAddingWidget(
                                 if (accountWasFound && userId != null) {
                                     viewModel.registerUserDevice(
                                         userId = userId,
-                                        deviceToken = deviceToken
+                                        deviceToken = deviceToken,
+                                        sharedPref = sharedPref
                                     )
                                     viewModel.insertNewCryptoAddresses(addressesWithKeysForM)
                                 } else {
-                                    viewModel.registerUserAccount(deviceToken = deviceToken)
+                                    viewModel.registerUserAccount(deviceToken = deviceToken, sharedPref = sharedPref)
                                     viewModel.createCryptoAddresses(addressesWithKeysForM)
                                     viewModel.insertNewCryptoAddresses(addressesWithKeysForM)
                                 }
-                                sharedPref.edit() { putBoolean("FIRST_STARTED", false) }
+                                sharedPref.edit { putBoolean("FIRST_STARTED", false) }
                             }
 
                             withContext(Dispatchers.Main) {
@@ -165,7 +166,7 @@ fun RecoveringWalletAddingWidget(
                             }
                         } catch (e: Exception) {
                             if (!sharedPref.getBoolean("FIRST_STARTED", true)) {
-                                sharedPref.edit() { putBoolean("FIRST_STARTED", true) }
+                                sharedPref.edit { putBoolean("FIRST_STARTED", true) }
                             }
                             Sentry.captureException(e)
                         }
