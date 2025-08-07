@@ -253,7 +253,7 @@ fun bottomSheetTransOnGeneralReceipt(
                                 when (result) {
                                     is TransferResult.Success -> snackbar.showSuccessSnackbar(
                                         "Успешное действие",
-                                        "Успешный перевод средств.",
+                                        "Успешно отправлено ${commissionOnTransaction.toBigInteger()} $tokenName",
                                         "Закрыть",
                                     )
                                     is TransferResult.Failure -> snackbar.showErrorSnackbar(

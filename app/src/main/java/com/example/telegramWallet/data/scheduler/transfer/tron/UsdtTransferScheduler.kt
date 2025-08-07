@@ -52,7 +52,7 @@ class UsdtTransferScheduler(
                 Sentry.captureException(e)
             }
 
-            delay(1500)
+            delay(1000)
 
             try {
                 val trxData = TrxTransactionsApi.trxTransactionsService.makeRequest(address.addressEntity.address)
@@ -68,7 +68,7 @@ class UsdtTransferScheduler(
                 Sentry.captureException(e)
             }
 
-            delay(1500)
+            delay(1000)
 
             if (centralAddress != null) {
                 // Запрос к API на получение TRX транзакций.
@@ -85,7 +85,7 @@ class UsdtTransferScheduler(
                 }
             }
 
-            delay(1500)
+            delay(1000)
         }
     }
 

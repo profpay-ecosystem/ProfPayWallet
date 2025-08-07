@@ -25,5 +25,5 @@ data class PendingTransactionEntity(
     @ColumnInfo(name = "tx_id") val txid: String,
     @ColumnInfo(name = "amount") val amount: BigInteger,
     @ColumnInfo(name = "timestamp") val timestamp: Long = System.currentTimeMillis(),
-    @ColumnInfo(name = "ttl_mills") val ttlMillis: Long = 10 * 60 * 1000 // TTL 10 минут
+    @ColumnInfo(name = "ttl_mills") val ttlMillis: Long = 15 * 60 * 1000 // TTL 15 минут
 )

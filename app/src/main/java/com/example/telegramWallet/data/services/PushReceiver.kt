@@ -16,6 +16,7 @@ import com.example.telegramWallet.data.database.entities.wallet.SmartContractEnt
 import com.example.telegramWallet.data.database.repositories.ProfileRepo
 import com.example.telegramWallet.data.database.repositories.TransactionsRepo
 import com.example.telegramWallet.data.database.repositories.wallet.AddressRepo
+import com.example.telegramWallet.data.database.repositories.wallet.PendingTransactionRepo
 import com.example.telegramWallet.data.database.repositories.wallet.SmartContractRepo
 import com.example.telegramWallet.data.database.repositories.wallet.TokenRepo
 import com.example.telegramWallet.models.pushy.PushyDeployContractSuccessfullyMessage
@@ -39,6 +40,7 @@ class PushReceiver : BroadcastReceiver(), CoroutineScope {
     @Inject lateinit var addressRepo: AddressRepo
     @Inject lateinit var smartContractRepo: SmartContractRepo
     @Inject lateinit var profileRepo: ProfileRepo
+    @Inject lateinit var pendingTransactionRepo: PendingTransactionRepo
 
     private val localJson = Json { ignoreUnknownKeys = false }
 
@@ -57,6 +59,7 @@ class PushReceiver : BroadcastReceiver(), CoroutineScope {
             val pushyObj = localJson.decodeFromString<PushyTransferErrorMessage>(transferErrorMessage)
             launch {
                 val address = addressRepo.getAddressEntityByAddress(pushyObj.senderAddress)
+                pendingTransactionRepo.deletePendingTransactionByTxId(pushyObj.transactionId)
                 if (address?.addressId != null) {
                     transactionRepo.transactionSetProcessedUpdateFalseByTxId(pushyObj.transactionId)
                 }

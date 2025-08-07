@@ -21,6 +21,7 @@ import com.example.telegramWallet.data.database.repositories.wallet.CentralAddre
 import com.example.telegramWallet.data.database.repositories.wallet.PendingTransactionRepo
 import com.example.telegramWallet.data.database.repositories.wallet.TokenRepo
 import com.example.telegramWallet.data.scheduler.transfer.tron.UsdtTransferScheduler
+import com.example.telegramWallet.data.scheduler.transfer.tron.rollbackFrozenTransactions
 import com.example.telegramWallet.tron.Tron
 import dagger.hilt.android.AndroidEntryPoint
 import dev.inmo.krontab.builder.buildSchedule
@@ -28,6 +29,7 @@ import dev.inmo.krontab.doInfinity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
@@ -116,23 +118,39 @@ class PusherService : Service(), CoroutineScope {
         manager.createNotificationChannel(serviceChannel)
     }
 
-    private suspend fun scheduleAll() {
-        val kronScheduler = buildSchedule {
+    private suspend fun scheduleAll() = coroutineScope {
+        val kronFastScheduler = buildSchedule {
+            seconds {
+                0 every 5
+            }
+        }
+        val kronTransferScheduler = buildSchedule {
             seconds {
                 0 every 45
             }
         }
-        kronScheduler.doInfinity {
-            UsdtTransferScheduler(
-                addressRepo = addressRepo,
-                transactionsRepo = transactionsRepo,
-                profileRepo = profileRepo,
-                tokenRepo = tokenRepo,
-                centralAddressRepo = centralAddressRepo,
-                notificationFunction = ::showNotification,
-                tron = tron,
-                pendingTransactionRepo = pendingTransactionRepo
-            ).scheduleAddresses()
+
+        val transferScheduler = UsdtTransferScheduler(
+            addressRepo = addressRepo,
+            transactionsRepo = transactionsRepo,
+            profileRepo = profileRepo,
+            tokenRepo = tokenRepo,
+            centralAddressRepo = centralAddressRepo,
+            notificationFunction = ::showNotification,
+            tron = tron,
+            pendingTransactionRepo = pendingTransactionRepo
+        )
+
+        launch {
+            kronFastScheduler.doInfinity {
+                rollbackFrozenTransactions(pendingTransactionRepo = pendingTransactionRepo)
+            }
+        }
+
+        launch {
+            kronTransferScheduler.doInfinity {
+                transferScheduler.scheduleAddresses()
+            }
         }
     }
 

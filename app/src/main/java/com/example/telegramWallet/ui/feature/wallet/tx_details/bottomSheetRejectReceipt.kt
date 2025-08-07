@@ -333,6 +333,7 @@ fun bottomSheetRejectReceipt(
                         onClick = {
                             if (viewModel.tron.addressUtilities.isValidTronAddress(addressSending)) {
                                 isButtonEnabled = false // Отключаем кнопку
+                                setIsConfirmTransaction(true)
                                 viewModel.viewModelScope.launch {
                                     val result = withContext(Dispatchers.IO) {
                                         viewModel.rejectTransaction(
@@ -340,7 +341,6 @@ fun bottomSheetRejectReceipt(
                                             addressWithTokens = addressWithTokens,
                                             amount = valueAmount.toBigDecimal().toSunAmount(),
                                             commission = commissionOnTransaction.toSunAmount(),
-                                            tokenName = tokenName,
                                             tokenEntity = tokenEntity
                                         )
                                     }
@@ -348,7 +348,7 @@ fun bottomSheetRejectReceipt(
                                     when (result) {
                                         is TransferResult.Success -> snackbar.showSuccessSnackbar(
                                             "Успешное действие",
-                                            "Успешно отправлено ${valueAmount.toBigInteger().toTokenAmount()} $tokenName",
+                                            "Успешно отправлено ${valueAmount.toBigInteger()} $tokenName",
                                             "Закрыть",
                                         )
                                         is TransferResult.Failure -> snackbar.showErrorSnackbar(
@@ -360,6 +360,7 @@ fun bottomSheetRejectReceipt(
 
                                     setIsOpenSheet(false)
                                     isButtonEnabled = true
+                                    setIsConfirmTransaction(false)
                                 }
                             }
                         },

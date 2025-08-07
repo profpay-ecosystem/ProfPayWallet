@@ -16,4 +16,7 @@ interface PendingTransactionDao {
 
     @Query("DELETE FROM pending_transaction WHERE tx_id = :txid")
     fun deletePendingTransactionByTxId(txid: String)
+
+    @Query("SELECT * FROM pending_transaction WHERE timestamp + ttl_mills < :currentTime")
+    fun getExpiredTransactions(currentTime: Long): List<PendingTransactionEntity>
 }
