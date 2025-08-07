@@ -245,7 +245,6 @@ fun bottomSheetTransOnGeneralReceipt(
                                         addressWithTokens = addressWithTokens,
                                         commission = commissionOnTransaction.toSunAmount(),
                                         walletId = walletId,
-                                        tokenName = tokenName,
                                         tokenEntity = tokenEntity
                                     )
                                 }
