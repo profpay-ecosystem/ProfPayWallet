@@ -1,6 +1,8 @@
 package com.example.telegramWallet.ui.screens.wallet
 
 import StackedSnackbarHost
+import StackedSnakbarHostState
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,11 +20,15 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -44,11 +50,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
@@ -60,6 +69,7 @@ import com.example.telegramWallet.data.flow_db.repo.AmlResult
 import com.example.telegramWallet.data.utils.toBigInteger
 import com.example.telegramWallet.data.utils.toTokenAmount
 import com.example.telegramWallet.exceptions.aml.ServerAmlException
+import com.example.telegramWallet.tron.Transactions
 import com.example.telegramWallet.ui.app.theme.BackgroundContainerButtonLight
 import com.example.telegramWallet.ui.app.theme.GreenColor
 import com.example.telegramWallet.ui.app.theme.PubAddressDark
@@ -111,10 +121,16 @@ fun TXDetailsScreen(
             }
 
             if (transactionEntity!!.tokenName == "USDT") {
-                dollarAmount = decimalFormat.format((transactionEntity?.amount ?: BigInteger.ONE).toTokenAmount())
+                dollarAmount = decimalFormat.format(
+                    (transactionEntity?.amount ?: BigInteger.ONE).toTokenAmount()
+                )
             } else {
-                val trxToUsdtRate = viewModel.exchangeRatesRepo.getExchangeRateValue(BinanceSymbolEnum.TRX_USDT.symbol)
-                dollarAmount = decimalFormat.format((transactionEntity?.amount ?: BigInteger.ONE).toTokenAmount().toDouble() * trxToUsdtRate)
+                val trxToUsdtRate =
+                    viewModel.exchangeRatesRepo.getExchangeRateValue(BinanceSymbolEnum.TRX_USDT.symbol)
+                dollarAmount = decimalFormat.format(
+                    (transactionEntity?.amount ?: BigInteger.ONE).toTokenAmount()
+                        .toDouble() * trxToUsdtRate
+                )
             }
 
             if (transactionEntity!!.receiverAddressId != null) {
@@ -230,150 +246,24 @@ fun TXDetailsScreen(
                             Text(text = walletName, style = MaterialTheme.typography.bodyLarge)
                         }
                     }
-
-                    Text(
-                        text = "Адрес отправителя",
-                        style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp),
-                        modifier = Modifier.padding(bottom = 4.dp, top = 12.dp),
+                    CardAndDropDownMenuForTxDetails(
+                        title = "Адрес отправителя",
+                        contentText = transactionEntity?.senderAddress,
+                        stackedSnackbarHostState = stackedSnackbarHostState,
+                        isHashTransaction = false
                     )
-                    Card(
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.padding(vertical = 4.dp),
-                        elevation = CardDefaults.cardElevation(10.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .padding(vertical = 10.dp, horizontal = 16.dp)
-                                .fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                modifier = Modifier.weight(0.9f),
-                                text = transactionEntity?.senderAddress ?: "...",
-                                style = MaterialTheme.typography.bodySmall,
-
-                                )
-                            IconButton(
-                                modifier = Modifier.size(30.dp),
-                                onClick = {
-                                    clipboardManager.setText(
-                                        AnnotatedString(transactionEntity?.senderAddress ?: "")
-                                    )
-                                    stackedSnackbarHostState.showSuccessSnackbar(
-                                        "Успешное действие",
-                                        "Копирование выполнено успешно",
-                                        "Закрыть"
-                                    )
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = ImageVector.vectorResource(id = R.drawable.icon_copy),
-                                    contentDescription = "",
-                                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                            }
-                        }
-                    }
-
-                    Text(
-                        text = "Адрес получения",
-                        style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp),
-                        modifier = Modifier.padding(bottom = 4.dp, top = 12.dp),
+                    CardAndDropDownMenuForTxDetails(
+                        title = "Адрес получения",
+                        contentText = transactionEntity?.receiverAddress,
+                        stackedSnackbarHostState = stackedSnackbarHostState,
+                        isHashTransaction = false
                     )
-                    Card(
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.padding(vertical = 4.dp),
-                        elevation = CardDefaults.cardElevation(10.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .padding(vertical = 10.dp, horizontal = 16.dp)
-                                .fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                modifier = Modifier.weight(0.9f),
-                                text = transactionEntity?.receiverAddress ?: "...",
-                                style = MaterialTheme.typography.bodySmall,
-
-                                )
-                            IconButton(
-                                modifier = Modifier.size(30.dp),
-                                onClick = {
-                                    clipboardManager.setText(
-                                        AnnotatedString(transactionEntity?.receiverAddress ?: "")
-                                    )
-                                    stackedSnackbarHostState.showSuccessSnackbar(
-                                        "Успешное действие",
-                                        "Копирование выполнено успешно",
-                                        "Закрыть"
-                                    )
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = ImageVector.vectorResource(id = R.drawable.icon_copy),
-                                    contentDescription = "",
-                                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                            }
-                        }
-                    }
-
-                    Text(
-                        text = "Хэш транзакции",
-                        style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp),
-                        modifier = Modifier.padding(bottom = 4.dp, top = 12.dp),
+                    CardAndDropDownMenuForTxDetails(
+                        title = "Хэш транзакции",
+                        contentText = transactionEntity?.txId,
+                        stackedSnackbarHostState = stackedSnackbarHostState,
+                        isHashTransaction = true
                     )
-                    Card(
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.padding(vertical = 4.dp),
-                        elevation = CardDefaults.cardElevation(10.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .padding(vertical = 10.dp, horizontal = 16.dp)
-                                .fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                modifier = Modifier.weight(0.9f),
-                                text = transactionEntity?.txId ?: "...",
-                                style = MaterialTheme.typography.bodySmall,
-                                )
-                            IconButton(
-                                modifier = Modifier.size(30.dp),
-                                onClick = {
-                                    clipboardManager.setText(
-                                        AnnotatedString(transactionEntity?.txId ?: "")
-                                    )
-                                    stackedSnackbarHostState.showSuccessSnackbar(
-                                        "Успешное действие",
-                                        "Копирование выполнено успешно",
-                                        "Закрыть"
-                                    )
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = ImageVector.vectorResource(id = R.drawable.icon_copy),
-                                    contentDescription = "",
-                                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                            }
-                        }
-                    }
-
 
                     Text(
                         text = "Сумма",
@@ -424,7 +314,7 @@ fun TXDetailsScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("Комиссия", style = MaterialTheme.typography.bodyLarge,)
+                                Text("Комиссия", style = MaterialTheme.typography.bodyLarge)
                                 Text(
                                     text = "$commissionBySending USDT",
                                     style = MaterialTheme.typography.bodySmall,
@@ -449,7 +339,7 @@ fun TXDetailsScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Дата", style = MaterialTheme.typography.bodyLarge,)
+                            Text("Дата", style = MaterialTheme.typography.bodyLarge)
                             Text(
                                 text = convertTimestampToDateTime(
                                     transactionEntity?.timestamp ?: 1
@@ -595,12 +485,103 @@ fun TXDetailsScreen(
                         setAmlReleaseDialog(false)
                     },
                     dialogTitle = "Выпуск AML",
-                    dialogText = "Для получения AML необходимо внести плату за его выпуск или перевыпуск в размере ${amlFeeResult?.toBigInteger()?.toTokenAmount() ?: 0} TRX.\n\n" +
+                    dialogText = "Для получения AML необходимо внести плату за его выпуск или перевыпуск в размере ${
+                        amlFeeResult?.toBigInteger()?.toTokenAmount() ?: 0
+                    } TRX.\n\n" +
                             "Это обязательная процедура, которая обеспечивает актуализацию и соответствие AML требованиям текущего законодательства и стандартов.\n\n" +
                             "Сумма будет списана с центрального адреса которому принадлежит данный адрес!",
                     textConfirmButton = "Оплатить и получить",
                     textDismissButton = "Закрыть",
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun CardAndDropDownMenuForTxDetails(
+    title: String,
+    contentText: String?,
+    stackedSnackbarHostState: StackedSnakbarHostState,
+    isHashTransaction: Boolean,
+
+) {
+    val clipboardManager: ClipboardManager = LocalClipboardManager.current
+    var expandedDropdownMenu by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp),
+        modifier = Modifier.padding(bottom = 4.dp, top = 12.dp),
+    )
+    Card(
+        shape = RoundedCornerShape(10.dp),
+        modifier = Modifier.padding(vertical = 4.dp),
+        elevation = CardDefaults.cardElevation(10.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primary
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(vertical = 10.dp, horizontal = 16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                modifier = Modifier.weight(0.9f),
+                text = contentText ?: "...",
+                style = MaterialTheme.typography.bodySmall,
+
+                )
+            IconButton(
+                modifier = Modifier.size(30.dp),
+                onClick = {
+                    expandedDropdownMenu = !expandedDropdownMenu
+                }
+            ) {
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = R.drawable.icon_copy),
+                    contentDescription = "",
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+
+                DropdownMenu(
+                    expanded = expandedDropdownMenu,
+                    onDismissRequest = { expandedDropdownMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        onClick = {
+                            clipboardManager.setText(
+                                AnnotatedString(contentText ?: "")
+                            )
+                            stackedSnackbarHostState.showSuccessSnackbar(
+                                "Успешное действие",
+                                "Копирование выполнено успешно",
+                                "Закрыть"
+                            )
+                            expandedDropdownMenu = false
+                        },
+                        text = { Text("Скопировать") }
+                    )
+                    HorizontalDivider()
+                    DropdownMenuItem(
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW).apply {
+                                data = if(isHashTransaction){
+                                    "https://tronscan.org/#/transaction/${contentText}".toUri()
+                                } else {
+                                    "https://tronscan.org/#/address/${contentText}".toUri()
+                                }
+                            }
+                            context.startActivity(intent)
+                            expandedDropdownMenu = false
+                        },
+                        text = { Text("Перейти в Tron Scan", fontWeight = FontWeight.SemiBold) }
+                    )
+                }
             }
         }
     }
