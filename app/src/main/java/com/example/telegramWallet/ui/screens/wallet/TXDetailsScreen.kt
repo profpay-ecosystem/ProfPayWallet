@@ -55,6 +55,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
@@ -525,7 +526,8 @@ fun CardAndDropDownMenuForTxDetails(
     ) {
         Row(
             modifier = Modifier
-                .padding(vertical = 10.dp, horizontal = 16.dp)
+                .padding(vertical = 10.dp)
+                .padding(start = 16.dp, end = 8.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
@@ -543,7 +545,8 @@ fun CardAndDropDownMenuForTxDetails(
                 }
             ) {
                 Icon(
-                    imageVector = ImageVector.vectorResource(id = R.drawable.icon_copy),
+                    modifier = Modifier.size(20.dp),
+                    imageVector = ImageVector.vectorResource(id = R.drawable.icon_more_vert),
                     contentDescription = "",
                     tint = MaterialTheme.colorScheme.onSecondaryContainer
                 )
